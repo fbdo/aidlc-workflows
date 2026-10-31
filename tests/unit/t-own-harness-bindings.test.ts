@@ -24,6 +24,7 @@ const TREES: ReadonlyArray<readonly [string, string, string]> = [
   ["cursor", ".cursor", "Cursor"],
   ["opencode", ".aidlc", "opencode"],
   ["copilot", ".aidlc", "GitHub Copilot"],
+  ["jcode", ".jcode", "jcode"],
 ];
 const TOOLS = TREES.map(([, , heading]) => heading);
 const MODULES = [
@@ -163,7 +164,7 @@ describe("t-own-harness-bindings", () => {
     const { keepOwnHarnessBindings } = await import("../../scripts/harness-bindings.ts");
     const partial = TOOLS.slice(0, 6).map((tool) => `### ${tool}\n\n${tool} body.\n`).join("\n");
     expect(() => keepOwnHarnessBindings(`## Bindings\n\n${partial}`, "claude", "partial.md"))
-      .toThrow("missing GitHub Copilot");
+      .toThrow("missing jcode, GitHub Copilot");
     expect(() => keepOwnHarnessBindings("### Cursor\n\nalone\n\n### Next\n", "cursor", "lone.md"))
       .toThrow("a binding run must name each tool once");
     // A harness being ported, with no heading registered yet, keeps every subsection.

@@ -252,7 +252,7 @@ AI-DLC's own install is not the project's code. The brief tells the developer
 not to scan or document it:
 
 - the harness directories `.claude/`, `.kiro/`, `.codex/`, `.cursor/`,
-  `.opencode/`, and `.aidlc/`, and the `aidlc/` workspace;
+  `.jcode/`, `.opencode/`, and `.aidlc/`, and the `aidlc/` workspace;
 - the agents, hooks, and skills AI-DLC writes under `.github/` (Copilot) and
   `.agents/` (Codex): the `aidlc`-named ones, and every skill whose `SKILL.md`
   frontmatter says `generated-by: aidlc-runner-gen` (stage runners, plugin

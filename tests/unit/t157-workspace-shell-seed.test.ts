@@ -164,6 +164,11 @@ describe("t157 seeded workspace shell + re-rooted .gitignore (SEED)", () => {
         // native include (both Copilot surfaces expand @-imports).
         const agentsMd = readFileSync(harness.onboardingDist, "utf-8");
         expect(agentsMd, harness.name).toContain("@aidlc/active-memory/org.md");
+      } else if (harness.capabilities.memoryInclude === "jcode-engine") {
+        // jcode has no include syntax: the engine hands each step its rules,
+        // and the prompt overlay carries the native onboarding.
+        expect(existsSync(harness.onboardingDist)).toBe(true);
+        expect(existsSync(harness.harnessOnboardingDist)).toBe(true);
       } else if (harness.capabilities.memoryInclude === "cursor-rule") {
         // Cursor: the alwaysApply rule lists the method files as plain paths
         // (no @-import expansion on Cursor); the sessionStart hook injects the

@@ -835,6 +835,7 @@ function modelHarness(value: string): ModelHarness {
     value === "codex" ||
     value === "copilot" ||
     value === "cursor" ||
+    value === "jcode" ||
     value === "kiro" ||
     value === "kiro-ide" ||
     value === "opencode"
@@ -8597,6 +8598,9 @@ function firstRunNextCommands(distribution: string): [string, string] {
   }
   if (distribution === "cursor") {
     return ["cursor                         open Cursor in this repo", '/aidlc "what you want built"  describe your first intent'];
+  }
+  if (distribution === "jcode") {
+    return ["jcode                         open jcode in this repo, then run `jcode trust grant`", '/aidlc "what you want built"  describe your first intent'];
   }
   if (distribution === "kiro-ide") {
     return ["kiro                          open Kiro IDE (or kiro-cli --v3) in this repo", '/aidlc "what you want built"  describe your first intent'];

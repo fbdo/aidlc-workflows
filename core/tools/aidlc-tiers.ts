@@ -26,6 +26,11 @@
 //                   Every tier omits `model`, so roles inherit the user's
 //                   selected session/provider model. `judgment` also omits
 //                   effort; `balanced` pins medium effort.
+//   - jcode         agent definition .md frontmatter, like Claude Code:
+//                   `judgment` and `templated` write `model: inherit` and NO
+//                   effort line; `balanced` writes `model: inherit` with
+//                   `effort: medium`. `inherit` keeps the coordinator's model
+//                   even when the operator pins another for swarm workers.
 //   - Kiro CLI/IDE  every tier omits `"model"` — Kiro agents INHERIT the
 //                   session model (a shipped model ID resolves only when that
 //                   model is enabled on the user's install; a session on
@@ -114,6 +119,12 @@ export type TierProjection = {
    *  accounts reject every named model), so a pinned id would hard-fail
    *  installs on lower plans; agents inherit the session model instead. */
   cursor: { model: string | null };
+  /** jcode agent definition frontmatter (.jcode/agents/*.md): `model:`
+   *  ("inherit" follows the coordinator's model even when the operator pins
+   *  another for swarm workers) and optional `effort:`. Same values as Claude's
+   *  effort key, and jcode also accepts none/minimal. An omitted effort follows
+   *  the operator's swarm default. */
+  jcode: { model: string | null; effort: ClaudeEffort | null };
 };
 
 export type Harness = keyof TierProjection;
@@ -130,6 +141,7 @@ export const TIER_PROJECTIONS: Record<Tier, TierProjection> = {
     opencode: { model: null, variant: null },
     copilot: { model: null },
     cursor: { model: null },
+    jcode: { model: "inherit", effort: null },
   },
   balanced: {
     // Effort pinned to medium. Balanced is the reviewer tier - both
@@ -143,6 +155,7 @@ export const TIER_PROJECTIONS: Record<Tier, TierProjection> = {
     kiro: { model: null },
     opencode: { model: null, variant: "medium" },
     copilot: { model: null },
+    jcode: { model: "inherit", effort: "medium" },
   },
   templated: {
     // The tier remains a models-dial group for pattern-following work, but the
@@ -154,6 +167,7 @@ export const TIER_PROJECTIONS: Record<Tier, TierProjection> = {
     opencode: { model: null, variant: null },
     copilot: { model: null },
     cursor: { model: null },
+    jcode: { model: "inherit", effort: null },
   },
 };
 

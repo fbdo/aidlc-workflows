@@ -1026,7 +1026,9 @@ export function classifyFirstContact(
 // does it its own way, and the engine needs no override written into the
 // command: Codex gives every command CODEX_THREAD_ID, Claude Code gives
 // CLAUDE_CODE_SESSION_ID beside the pid of the process running that chat, and
-// Kiro CLI gives KIRO_SESSION_ID (measured: its shell carries no pid).
+// Kiro CLI gives KIRO_SESSION_ID (measured: its shell carries no pid), and jcode
+// gives JCODE_SESSION_ID to every bash command, a swarm worker's own id in its
+// shell (the hook adapter notes the worker's coordinator, as for Codex helpers).
 //
 // A variable is only as good as the chat it names. A shell the person started
 // from inside a chat keeps the variable after that chat is gone, so Claude
@@ -1042,17 +1044,19 @@ function hostNamedChat(projectDir: string): string | null {
       return claudeNamedChat()?.session ?? null;
     case ".kiro":
       return validSessionId(process.env.KIRO_SESSION_ID);
+    case ".jcode":
+      return validSessionId(process.env.JCODE_SESSION_ID);
     default:
       return null;
   }
 }
 
 // The hosts whose agent commands name the chat they run in, by tree: Claude
-// Code, Codex and Kiro CLI through hostNamedChat's variables, opencode through
+// Code, Codex, Kiro CLI and jcode through hostNamedChat's variables, opencode through
 // the override its plugin hands each command. Cursor, Copilot and Kiro IDE
 // (Kiro CLI v3 runs its tree) find a command's chat only through the process
 // tree, which the chats of one window share.
-export const CHAT_NAMING_HOSTS: ReadonlySet<string> = new Set(["claude", "codex", "kiro", "opencode"]);
+export const CHAT_NAMING_HOSTS: ReadonlySet<string> = new Set(["claude", "codex", "jcode", "kiro", "opencode"]);
 
 export function claudeNamedChat(): { pid: number; session: string } | null {
   const pid = Number.parseInt(process.env.CLAUDE_PID ?? "", 10);

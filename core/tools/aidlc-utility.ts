@@ -7346,6 +7346,7 @@ const SCAN_EXCLUDE = new Set([
   ".opencode",
   ".aidlc",
   ".cursor",
+  ".jcode",
   "aidlc-docs",
   "node_modules",
   ".git",

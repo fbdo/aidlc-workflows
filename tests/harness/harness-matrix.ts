@@ -36,6 +36,7 @@ type HarnessCapabilities = {
     | "codex-engine"
     | "copilot-agents-md"
     | "cursor-rule"
+    | "jcode-engine"
     | "kiro-resources"
     | "kiro-steering"
     | "opencode-instructions";
@@ -131,6 +132,27 @@ const HARNESS_CAPABILITIES = {
     kiroAgentJson: false,
     ideAgentTools: false,
     reviewerScopeRegistration: "cursor-hooks",
+  },
+  jcode: {
+    harnessDir: ".jcode",
+    onboarding: {
+      mode: "manifest",
+      fills: "onboarding.fills.ts",
+      dist: "AGENTS.md",
+      harnessDist: ".jcode/prompt-overlay.md",
+    },
+    rootFiles: [".gitignore", "AGENTS.md"],
+    skillsRoot: ".jcode/skills",
+    plugin: {
+      kind: "store",
+      manifestDir: ".jcode-plugin",
+      marketplaceDir: ".jcode-plugin",
+      wiringFile: "hooks/hooks.json",
+    },
+    memoryInclude: "jcode-engine",
+    kiroAgentJson: false,
+    ideAgentTools: false,
+    reviewerScopeRegistration: "unsupported",
   },
   "kiro-ide": {
     harnessDir: ".kiro",

@@ -19,6 +19,7 @@ export const BINDING_HEADINGS: Readonly<Record<string, string>> = {
   codex: "Codex CLI",
   cursor: "Cursor",
   opencode: "opencode",
+  jcode: "jcode",
   copilot: "GitHub Copilot",
 };
 
