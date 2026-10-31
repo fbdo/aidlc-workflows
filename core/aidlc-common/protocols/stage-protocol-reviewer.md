@@ -440,6 +440,12 @@ If `directive.reviewer` is present, invoke the reviewer as a sub-agent (via the 
 
 ---
 
+### jcode
+
+If `directive.reviewer` is present, invoke the reviewer as a sub-agent (the `swarm` tool's `spawn` action with `agent` set to the reviewer agent, then `await_members`).
+
+---
+
 ### GitHub Copilot
 
 If `directive.reviewer` is present, invoke the reviewer as a sub-agent (delegate to the reviewer custom agent - the `.github/agents/` roster is exposed as callable agents).

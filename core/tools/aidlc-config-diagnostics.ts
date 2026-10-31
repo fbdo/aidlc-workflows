@@ -109,11 +109,13 @@ export type RuntimeRecord = {
 // answers use `current`, `amazon-bedrock`, or `other`.
 export type ProviderKind = "current" | "amazon-bedrock" | "builtin" | "other";
 
-// Kiro CLI and Kiro IDE provide their own model access. AI-DLC has no provider
-// decision to ask, write, or check for them, even when a legacy answer exists.
-export type BedrockOrientedHarness = Exclude<ModelHarness, "kiro" | "kiro-ide">;
+// Kiro CLI, Kiro IDE and jcode provide their own model access (jcode's providers
+// are the person's own jcode login). AI-DLC has no provider decision to ask,
+// write, or check for them, even when a legacy answer exists.
+export type BedrockOrientedHarness = Exclude<ModelHarness, "kiro" | "kiro-ide" | "jcode">;
 
 const HARNESS_OWNED_MODEL_ACCESS: ReadonlySet<ModelHarness> = new Set<ModelHarness>([
+  "jcode",
   "kiro",
   "kiro-ide",
 ]);
@@ -917,6 +919,14 @@ const HARNESS_CLI: Record<
     command: "cursor",
     required: false,
     install: "Install the Cursor CLI and ensure `cursor --version` works; IDE-only installs may omit it.",
+  },
+  // The floor is the first build whose `jcode version --json` lists the
+  // hook_capabilities AI-DLC needs; doctor checks the tokens themselves.
+  jcode: {
+    command: "jcode",
+    required: true,
+    minimumVersion: "0.99.1",
+    install: "Install a jcode build with AI-DLC support (`jcode version --json` lists hook_capabilities) and ensure `jcode --version` works.",
   },
   // The 2.x line is where the hooks, skills and workspace default agent this
   // distribution relies on shipped; the guide asks for 2.6 or later.

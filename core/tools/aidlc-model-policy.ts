@@ -44,6 +44,7 @@ export type ModelHarness =
   | "codex"
   | "copilot"
   | "cursor"
+  | "jcode"
   | "kiro"
   | "kiro-ide"
   | "opencode";
@@ -153,6 +154,16 @@ export const HARNESS_HONESTY = Object.freeze({
     message:
       "Kiro takes a model and an effort set for one agent; a preset or group effort is kept for other tools and changes nothing in Kiro.",
   }),
+  // jcode reads model and effort from the agent definition's frontmatter at each
+  // spawn (docs/AGENT_DEFINITIONS.md); a project's policy fields apply once the
+  // person trusts the `agents` scope, and the operator's force switch outranks them.
+  jcode: Object.freeze({
+    model: true,
+    effort: true,
+    groupEffort: true,
+    message:
+      "jcode applies a model and effort set on an agent definition once you trust this project's agents (jcode trust grant --scope agents); the operator's own swarm settings can still override them.",
+  }),
   cursor: Object.freeze({
     model: false,
     effort: false,
@@ -198,7 +209,7 @@ export function presetsChangeNothing(harness: ModelHarness): boolean {
 // this, so they never disagree on where a change lands.
 export function modelPolicyAgentsDir(harness: ModelHarness, harnessDir: string): string | null {
   if (harness === "opencode") return ".opencode/agents";
-  if (harness === "claude" || harness === "codex" || harness === "kiro" || harness === "kiro-ide") {
+  if (harness === "claude" || harness === "codex" || harness === "jcode" || harness === "kiro" || harness === "kiro-ide") {
     return `${harnessDir}/agents`;
   }
   return null;
@@ -212,6 +223,7 @@ export const HARNESS_PRODUCT_NAMES: Readonly<Record<ModelHarness, string>> = Obj
   codex: "Codex CLI",
   copilot: "GitHub Copilot",
   cursor: "Cursor",
+  jcode: "jcode",
   kiro: "Kiro CLI",
   "kiro-ide": "Kiro",
   opencode: "opencode",
@@ -718,7 +730,7 @@ export function applyModelPolicyToProjection(
     written?.push(path);
   };
 
-  if (harness === "claude") {
+  if (harness === "claude" || harness === "jcode") {
     for (const item of effective) {
       const path = join(agentsRoot, `${modelAgentStem(item.agent)}.md`);
       if (!existsSync(path)) throw new Error(`${path}: missing agent surface`);
@@ -901,7 +913,7 @@ export function modelPolicySurfaceDrift(
     }
     let path = "";
     let actual: { model?: string; effort?: ModelEffort } = {};
-    if (harness === "claude") {
+    if (harness === "claude" || harness === "jcode") {
       path = join(agentsRoot, `${modelAgentStem(name)}.md`);
       if (existsSync(path)) actual = markdownSurfaceValues(readFileSync(path, "utf-8"), "effort");
     } else if (harness === "codex") {
