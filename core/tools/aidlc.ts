@@ -1278,12 +1278,13 @@ function toolsDir(): string {
   return dispatcherDir();
 }
 
-type AdapterHarness = "codex" | "copilot" | "cursor" | "kiro" | "kiro-ide";
+type AdapterHarness = "codex" | "copilot" | "cursor" | "jcode" | "kiro" | "kiro-ide";
 
 const ADAPTER_HARNESS_LEAF: Record<AdapterHarness, string> = {
   codex: ".codex",
   copilot: ".aidlc",
   cursor: ".cursor",
+  jcode: ".jcode",
   kiro: ".kiro",
   "kiro-ide": ".kiro",
 };
@@ -1296,6 +1297,7 @@ function adapterFile(harness: AdapterHarness): string {
   if (harness === "codex") return "aidlc-codex-adapter.ts";
   if (harness === "copilot") return "aidlc-copilot-adapter.ts";
   if (harness === "cursor") return "aidlc-cursor-adapter.ts";
+  if (harness === "jcode") return "aidlc-jcode-adapter.ts";
   return "aidlc-kiro-adapter.ts";
 }
 

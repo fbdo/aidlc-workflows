@@ -1483,6 +1483,7 @@ function rewriteNativeInvocations(
     "kiro-adapter": true,
     "codex-adapter": true,
     "cursor-adapter": true,
+    "jcode-adapter": true,
     "copilot-adapter": true,
   };
   const projectPrefix = String.raw`(?:"?(?:\$\{?CLAUDE_PROJECT_DIR\}?/)?`;

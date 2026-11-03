@@ -2,7 +2,7 @@
 
 AI-DLC (AI-Driven Development Life Cycle) turns AI coding assistants into
 structured, verifiable software-delivery workflows. One harness-neutral core
-runs natively in Claude Code, Kiro CLI, Kiro IDE, Codex CLI, Cursor, opencode,
+runs natively in Claude Code, Kiro CLI, Kiro IDE, Codex CLI, Cursor, opencode, jcode,
 and GitHub Copilot.
 
 ![version](https://img.shields.io/badge/version-2.11.2-blue)
@@ -56,7 +56,7 @@ aidlc config --harness claude
 aidlc doctor
 ```
 
-Replace `claude` with `kiro`, `kiro-ide`, `codex`, `cursor`, `opencode`, or
+Replace `claude` with `kiro`, `kiro-ide`, `codex`, `cursor`, `opencode`, `jcode`, or
 `copilot`. Running `aidlc config` without `--harness` starts the interactive
 setup when a terminal is available. If you use Kiro IDE's own terminal in a
 project folder you have not trusted yet, Kiro first asks whether you trust it.
@@ -91,6 +91,7 @@ guide in the table below. The complete walkthrough is in
 | Codex CLI >= 0.145.0 | `aidlc config --harness codex` | `codex` | `$aidlc` | [Codex CLI](docs/guide/harnesses/codex-cli.md) |
 | Cursor | `aidlc config --harness cursor` | Open Cursor or run `agent` | `/aidlc` | [Cursor](docs/guide/harnesses/cursor.md) |
 | opencode >= 1.18.29 / OpenCode 2 | `aidlc config --harness opencode` | `opencode` | `/aidlc` | [opencode](docs/guide/harnesses/opencode.md) |
+| jcode | `aidlc config --harness jcode` | `jcode` (run `jcode trust grant` once) | `/aidlc` | [jcode](docs/guide/harnesses/jcode.md) |
 | GitHub Copilot CLI >= 1.0.74 / VS Code >= 1.130 | `aidlc config --harness copilot` | Copilot CLI or VS Code | `/aidlc` | [GitHub Copilot](docs/guide/harnesses/copilot.md) |
 
 Model-provider setup belongs to the harness. Shipped project configuration

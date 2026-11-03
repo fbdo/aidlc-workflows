@@ -18,6 +18,7 @@ Onboarding is installed in each harness's native instruction surface:
 | Codex CLI | `.codex/onboarding.md` (also injected through `developer_instructions` in `.codex/config.toml` when the project is trusted) |
 | Cursor | `.cursor/rules/aidlc-onboarding.mdc` |
 | opencode | `.aidlc/onboarding.md` |
+| jcode | Root `AGENTS.md` and `.jcode/prompt-overlay.md` |
 | GitHub Copilot | Root `AGENTS.md` (full onboarding, including method imports) |
 
 Kiro, Kiro IDE, Codex, Cursor, and opencode share a harness-neutral root
@@ -58,6 +59,7 @@ Pick your harness:
 | **Codex CLI** (≥ 0.145.0) | `$aidlc` | [AI-DLC on Codex CLI](codex-cli.md) — prerequisites, trust pre-seed, Bedrock config, the git-repo requirement. |
 | **Cursor** | `/aidlc` | [AI-DLC on Cursor](cursor.md) — one tree for the Cursor IDE and CLI, native subagents and skills, the hooks.json adapter, what's different on Cursor. |
 | **opencode** (1.18.29 or newer, or OpenCode 2) | `/aidlc` | [AI-DLC on opencode](opencode.md) — the split `.aidlc/` + `.opencode/` layout, the adapter plugin, what's different on opencode. |
+| **jcode** | `/aidlc` | [AI-DLC on jcode](jcode.md) — one `.jcode/` tree, native persona agents, project trust, what's different on jcode. |
 | **GitHub Copilot** (CLI ≥ 1.0.74 / VS Code ≥ 1.130) | `/aidlc` | [AI-DLC on GitHub Copilot](copilot.md) — one install for both surfaces, the `.github/` merge, folder trust, what's different on Copilot. |
 
 AI-DLC on Kiro (IDE or CLI) works best with **Claude Opus 4.8**, which requires a **paid Kiro plan**.
