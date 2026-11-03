@@ -458,6 +458,12 @@ describe("t266 conversation-language rule layer", () => {
           surface = join(harness.engineRoot, "agents", "aidlc.json");
           required = `file://${COPY_DIR}/**/*.md`;
           break;
+        case "jcode-engine":
+          // jcode, like Codex, has no ambient include: the engine hands each
+          // step the rules the compiled graph names.
+          surface = join(harness.engineRoot, "tools", "data", "stage-graph.json");
+          required = `"${MEMORY_DIR}/org.md"`;
+          break;
         case "opencode-instructions":
           surface = join(harness.distRoot, "opencode.json");
           required = `${COPY_DIR}/**/*.md`;
