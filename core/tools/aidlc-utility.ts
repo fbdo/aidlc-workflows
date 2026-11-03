@@ -4652,6 +4652,7 @@ export async function collectDoctorReport(
       );
     }
     if (harness === ".cursor") tsHooks.push("aidlc-cursor-adapter");
+    if (harness === ".jcode") tsHooks.push("aidlc-jcode-adapter");
     for (const h of tsHooks) {
       const hookPath = join(projectDir, harness, "hooks", `${h}.ts`);
       results.push({
@@ -4856,6 +4857,21 @@ export async function collectDoctorReport(
     // bash or edit map; the person's ask or deny is gone here, said once.
     const shortForm = openCodeGlobalShortFormNote();
     if (shortForm) results.push({ pass: true, severity: "warn", label: shortForm });
+  } else if (harness === ".jcode") {
+    // jcode: the hook wiring is the [hooks] table in .jcode/config.toml, which
+    // jcode runs only once the person has trusted the project.
+    const configPath = join(projectDir, harness, "config.toml");
+    let wired = false;
+    try {
+      wired = /^\[hooks\]/m.test(readFileSync(configPath, "utf-8"));
+    } catch {
+      wired = false;
+    }
+    results.push({
+      pass: wired,
+      label: "config.toml present with the [hooks] table (hook wiring)",
+      fix: projectedFileRepair("jcode", ".jcode/config.toml"),
+    });
   } else {
     const settingsPath = join(projectDir, harness, "settings.json");
     results.push({

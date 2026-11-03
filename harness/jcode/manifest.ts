@@ -4,8 +4,7 @@
 // only specific files under .jcode/ (skills/, agents/, hooks via config.toml,
 // prompt-overlay.md), so the engine directories (tools/, aidlc-common/,
 // knowledge/, sensors/, scopes/, hooks/) are inert data to jcode and share the
-// directory safely. Like Cursor, jcode consumes the standard projection with no
-// emit.ts.
+// directory safely. emit.ts writes the one code-shaped file, the [hooks] table.
 //
 // jcode specifics (docs/HOOKS.md and docs/AGENT_DEFINITIONS.md in jcode):
 //   - skills: .jcode/skills/<name>/SKILL.md, invoked as /<name> <text>. The
@@ -23,6 +22,7 @@
 //   - hooks: a project's [hooks] table in .jcode/config.toml, run only after the
 //     person trusts the project (`jcode trust grant`).
 import type { HarnessManifest } from "../../scripts/manifest-types.ts";
+import emit from "./emit.ts";
 import onboardingFills from "./onboarding.fills.ts";
 
 const manifest: HarnessManifest = {
@@ -66,6 +66,7 @@ const manifest: HarnessManifest = {
     { src: "skills/aidlc/question-rendering.md", dst: "skills/aidlc/question-rendering.md" },
     { src: "skills/aidlc/composer.md", dst: "skills/aidlc/composer.md" },
     { src: "skills/aidlc/tables.md", dst: "skills/aidlc/tables.md" },
+    { src: "hooks/aidlc-jcode-adapter.ts", dst: "hooks/aidlc-jcode-adapter.ts" },
     { src: "dot-gitignore", dst: ".gitignore", projectRoot: true },
   ],
 
@@ -80,7 +81,7 @@ const manifest: HarnessManifest = {
   // picked up by the model on its own.
   runnerFrontmatterAdditions: ["disable-model-invocation: true"],
 
-  emit: null,
+  emit,
 
   // jcode has no plugin store: the projection uses the uniform store layout
   // without a host catalogue.
