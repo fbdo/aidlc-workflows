@@ -337,7 +337,12 @@ export async function run(target: string, input: string, _extraArgs: string[] = 
       } else {
         for (const call of coreCalls(toolName, stdinJson, projectDir)) {
           if (call.tool_name !== "Write" && call.tool_name !== "Edit") continue;
-          const payload = JSON.stringify({ hook_event_name: "PostToolUse", ...call });
+          const payload = JSON.stringify({
+            hook_event_name: "PostToolUse",
+            ...(sessionId ? { session_id: sessionId } : {}),
+            cwd: projectDir,
+            ...call,
+          });
           await runCore("aidlc-write-audit-log.ts", payload);
           await runCore("aidlc-run-sensors.ts", payload);
         }

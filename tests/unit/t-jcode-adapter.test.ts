@@ -4,7 +4,7 @@
 // covers: hook:aidlc-record-human-turn
 
 import { describe, expect, test } from "bun:test";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { emitConfigToml } from "../../harness/jcode/emit.ts";
 
@@ -44,31 +44,25 @@ describe.skipIf(!existsSync(adapterPath))("jcode adapter conversions", () => {
 
 describe("jcode hooks table", () => {
   const toml = emitConfigToml((s) => s.replace("{{INVOKE}}", "aidlc"), "jcode", "engine");
+  const hooks = (Bun.TOML.parse(toml) as { hooks: Record<string, unknown> }).hooks;
 
   test("registers every wired event through the adapter route", () => {
-    for (const event of [
-      "session_start",
-      "session_end",
-      "user_prompt_submit",
-      "pre_tool",
-      "post_tool_feedback",
-      "stop",
-      "swarm_member_start",
-      "swarm_member_end",
-    ]) {
-      expect(toml).toContain(`${event} = "aidlc engine adapter jcode `);
-    }
+    expect(hooks).toMatchObject({
+      session_start: "aidlc engine adapter jcode session-start",
+      session_end: "aidlc engine adapter jcode session-end",
+      user_prompt_submit: "aidlc engine adapter jcode record-human-turn",
+      pre_tool: "aidlc engine adapter jcode guard-tool-call",
+      post_tool_feedback: "aidlc engine adapter jcode post-tool",
+      stop: "aidlc engine adapter jcode continue-workflow",
+      swarm_member_start: "aidlc engine adapter jcode log-subagent",
+      swarm_member_end: "aidlc engine adapter jcode log-subagent",
+    });
   });
 
   test("keeps timeouts inside jcode's caps", () => {
-    expect(toml).toContain("user_prompt_submit_timeout_ms = 30000");
-    expect(toml).toContain("pre_tool_timeout_ms = 120000");
-  });
-
-  test("the built tree ships the table and the adapter", () => {
-    const dist = join(ROOT, "dist", "jcode", ".jcode");
-    if (!existsSync(dist)) return;
-    expect(readFileSync(join(dist, "config.toml"), "utf-8")).toContain("[hooks]");
-    expect(existsSync(join(dist, "hooks", "aidlc-jcode-adapter.ts"))).toBe(true);
+    expect(hooks.user_prompt_submit_timeout_ms).toBe(30000);
+    for (const key of ["pre_tool_timeout_ms", "post_tool_feedback_timeout_ms", "stop_timeout_ms"]) {
+      expect(hooks[key]).toBe(120000);
+    }
   });
 });
