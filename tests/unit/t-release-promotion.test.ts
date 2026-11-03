@@ -555,6 +555,14 @@ describe("promotion workflow boundaries", () => {
     expect(step?.env?.CONTRIBUTORS).toBe(`\${{ inputs.contributors }}`);
     expect(step?.run).toContain('--contributors-file "$RUNNER_TEMP/contributors.txt"');
   });
+  test("the first stable release skips the update-from-previous check instead of failing", () => {
+    const steps = release.jobs["update-from-previous"].steps ?? [];
+    const find = steps.find((step) => step.id === "previous");
+    expect(find?.run).not.toContain('test -n "$previous"');
+    expect(find?.run).toContain("::notice");
+    const guarded = steps.filter((step) => step.if === `\${{ steps.previous.outputs.tag != '' }}`);
+    expect(guarded.map((step) => step.name ?? step.run)).toEqual(["bun scripts/package.ts", "Update from the last release"]);
+  });
   test("does not schedule CI or Full Suite; publication still requires lifecycle and upgrade checks", () => {
     expect(release.on).toHaveProperty("workflow_dispatch");
     expect(Object.values(release.jobs).some((job) => job.uses?.endsWith("full-suite.yml"))).toBe(false);
