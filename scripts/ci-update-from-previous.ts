@@ -373,7 +373,11 @@ async function check(previous: string, candidate: string, target: string, root: 
   // 2. A project for every harness, the person's own code committed, set up by the previous release.
   // A harness the previous release did not ship (jcode, on the first release that carries it) has nothing to update from.
   const shippedBefore = previousDistributions(previous);
-  const projects = HARNESSES.filter((harness) => shippedBefore === null || shippedBefore.has(harness)).map((harness) => {
+  if (shippedBefore === null) {
+    console.error(`Could not read the harnesses ${previous} shipped from its version.json release asset.`);
+    return 1;
+  }
+  const projects = HARNESSES.filter((harness) => shippedBefore.has(harness)).map((harness) => {
     const project = join(root, `project-${harness}`);
     mkdirSync(project, { recursive: true });
     spawnSync("git", ["init", "--quiet", project], { encoding: "utf-8", timeout: STEP_TIMEOUT_MS });
