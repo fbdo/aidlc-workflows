@@ -4,7 +4,8 @@
 // covers: hook:aidlc-record-human-turn
 
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { emitConfigToml } from "../../harness/jcode/emit.ts";
 
@@ -63,6 +64,30 @@ describe("jcode hooks table", () => {
     expect(hooks.user_prompt_submit_timeout_ms).toBe(30000);
     for (const key of ["pre_tool_timeout_ms", "post_tool_feedback_timeout_ms", "stop_timeout_ms"]) {
       expect(hooks[key]).toBe(120000);
+    }
+  });
+});
+
+describe.skipIf(!existsSync(adapterPath))("jcode post-tool feedback", () => {
+  test("a write's sensor result reaches post_tool_feedback stdout", () => {
+    const tmp = mkdtempSync(join(tmpdir(), "aidlc-jcode-post-"));
+    try {
+      cpSync(join(ROOT, "dist", "jcode", ".jcode"), join(tmp, ".jcode"), { recursive: true });
+      const hooks = join(tmp, ".jcode", "hooks");
+      writeFileSync(join(hooks, "aidlc-run-sensors.ts"),
+        'export async function run(): Promise<number> {\n' +
+        '  process.stdout.write(JSON.stringify({ systemMessage: "sensor: missing section" }));\n' +
+        '  return 0;\n}\n');
+      writeFileSync(join(hooks, "aidlc-write-audit-log.ts"), "export async function run(): Promise<number> { return 0; }\n");
+      const script = `const m = await import(${JSON.stringify(join(hooks, "aidlc-jcode-adapter.ts"))});` +
+        `process.exitCode = await m.run("post-tool", ${JSON.stringify(JSON.stringify({ file_path: "a.md", content: "x" }))});`;
+      const r = Bun.spawnSync([process.execPath, "-e", script], {
+        cwd: tmp,
+        env: { ...process.env, JCODE_PROJECT_DIR: tmp, JCODE_HOOK_TOOL_NAME: "write", AIDLC_HARNESS_DIR: ".jcode" },
+      });
+      expect(r.stdout.toString()).toContain("sensor: missing section");
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
     }
   });
 });

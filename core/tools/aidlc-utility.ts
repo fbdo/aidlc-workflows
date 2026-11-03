@@ -4863,13 +4863,14 @@ export async function collectDoctorReport(
     const configPath = join(projectDir, harness, "config.toml");
     let wired = false;
     try {
-      wired = /^\[hooks\]/m.test(readFileSync(configPath, "utf-8"));
+      const text = readFileSync(configPath, "utf-8");
+      wired = /^\[hooks\]/m.test(text) && /\badapter jcode\b/.test(text);
     } catch {
       wired = false;
     }
     results.push({
       pass: wired,
-      label: "config.toml present with the [hooks] table (hook wiring)",
+      label: "config.toml present with [hooks] rows calling the jcode adapter (hook wiring)",
       fix: projectedFileRepair("jcode", ".jcode/config.toml"),
     });
   } else {
