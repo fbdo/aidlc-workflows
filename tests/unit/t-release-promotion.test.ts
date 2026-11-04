@@ -528,7 +528,7 @@ describe("the stable page", () => {
 });
 
 describe("promotion workflow boundaries", () => {
-  type Job = { uses?: string; needs?: string[] | string; permissions?: Record<string, string>; steps?: Array<{ run?: string; env?: Record<string, string>; with?: Record<string, string> }> };
+  type Job = { uses?: string; needs?: string[] | string; permissions?: Record<string, string>; steps?: Array<{ id?: string; if?: string; name?: string; run?: string; env?: Record<string, string>; with?: Record<string, string> }> };
   const release = Bun.YAML.parse(readFileSync(join(REPO_ROOT, ".github/workflows/release.yml"), "utf8")) as { on: Record<string, unknown>; jobs: Record<string, Job> };
   test.each([
     [{ PREVIEW, VERSION: "", NOTES: "" }, ["version", "notes"]],
@@ -554,6 +554,14 @@ describe("promotion workflow boundaries", () => {
     const step = workflow.jobs.prepare.steps?.find((step) => step.run?.includes("release-promotion.ts prepare"));
     expect(step?.env?.CONTRIBUTORS).toBe(`\${{ inputs.contributors }}`);
     expect(step?.run).toContain('--contributors-file "$RUNNER_TEMP/contributors.txt"');
+  });
+  test("the first stable release skips the update-from-previous check instead of failing", () => {
+    const steps = release.jobs["update-from-previous"].steps ?? [];
+    const find = steps.find((step) => step.id === "previous");
+    expect(find?.run).not.toContain('test -n "$previous"');
+    expect(find?.run).toContain("::notice");
+    const guarded = steps.filter((step) => step.if === `\${{ steps.previous.outputs.tag != '' }}`);
+    expect(guarded.map((step) => step.name ?? step.run)).toEqual(["bun scripts/package.ts", "Update from the last release"]);
   });
   test("does not schedule CI or Full Suite; publication still requires lifecycle and upgrade checks", () => {
     expect(release.on).toHaveProperty("workflow_dispatch");

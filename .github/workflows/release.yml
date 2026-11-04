@@ -539,11 +539,15 @@ jobs:
           set -euo pipefail
           previous="$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --exclude-pre-releases \
             --limit 20 --json tagName --jq '[.[].tagName | select(. != env.CANDIDATE_TAG)] | .[0] // empty')"
-          test -n "$previous"
+          if [ -z "$previous" ]; then
+            echo "::notice title=No previous stable release::No earlier stable release exists, so the update-from-previous check is skipped."
+          fi
           echo "tag=$previous" >>"$GITHUB_OUTPUT"
       # The work each person leaves open is driven by the scripted stand-in, which reads the generated trees.
-      - run: bun scripts/package.ts
+      - if: ${{ steps.previous.outputs.tag != '' }}
+        run: bun scripts/package.ts
       - name: Update from the last release
+        if: ${{ steps.previous.outputs.tag != '' }}
         shell: bash
         env:
           CHANNEL: ${{ matrix.channel }}
