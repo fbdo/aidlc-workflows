@@ -687,6 +687,11 @@ try {
   # -Yes also answers yes to replacing a bin\aidlc that AI-DLC did not write
   # (the file is kept as a backup); at a terminal the binary asks instead.
   if ($Yes) { $arguments += '--yes' }
+  # An explicitly chosen release repository is saved in the machine config so
+  # later `aidlc update` runs stay on it. The default is not saved.
+  if ($env:AIDLC_RELEASE_REPOSITORY) {
+    $arguments += @('--release-repository', $env:AIDLC_RELEASE_REPOSITORY)
+  }
   $applyOutput = (& $binary @arguments --json | Out-String).Trim()
   $applyCode = $LASTEXITCODE
   try {

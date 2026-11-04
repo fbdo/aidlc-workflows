@@ -40,6 +40,7 @@ import {
 import { installRoot, windowsGitBashLauncherState } from "./aidlc-install-paths.ts";
 import { deepFolder } from "./aidlc-folder-depth.ts";
 import { versionChannel } from "./aidlc-channel.ts";
+import { resolvedReleaseRepository, validReleaseRepository } from "./aidlc-machine-config.ts";
 import {
   configureColor,
   dim,
@@ -220,6 +221,29 @@ export function updateCheck(state: UpdateState): DoctorCheck {
       ? undefined
       : `run \`${invoke} update --check\``,
   };
+}
+
+// Names where releases come from when it is not the default repository, so a
+// machine that quietly follows a fork shows it. An invalid machine config is
+// reported by the update row.
+export function releaseSourceCheck(): DoctorCheck | null {
+  try {
+    const { repository, source } = resolvedReleaseRepository();
+    if (source === "default") return null;
+    if (!validReleaseRepository(repository)) {
+      return {
+        pass: false,
+        severity: "warn",
+        label: `Release source: ${repository} (${source}) is not owner/name`,
+        fix: source === "environment"
+          ? "set AIDLC_RELEASE_REPOSITORY to owner/name"
+          : `run \`${aidlcInvocation()} system config global set release-repository owner/name\``,
+      };
+    }
+    return { pass: true, label: `Release source: ${repository} (${source})` };
+  } catch {
+    return null;
+  }
 }
 
 function pluginCheck(projectDir: string, verbose: boolean): DoctorCheck {
@@ -621,6 +645,8 @@ export async function main(argv: string[]): Promise<void> {
   const gitBashLauncher = windowsGitBashLauncherCheck();
   if (gitBashLauncher) checks.push(gitBashLauncher);
   checks.push(updateCheck(update));
+  const releaseSource = releaseSourceCheck();
+  if (releaseSource) checks.push(releaseSource);
   checks.push(pluginCheck(projectDir, flags.verbose === "true"));
   checks.push(...settingsDoctorChecks(projectDir));
   checks.push(modelsPolicyCheck(projectDir, flags.verbose === "true"));

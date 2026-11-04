@@ -227,7 +227,9 @@ installation uses `status: "failed"`, exit code 1, `data.installed: true`, and
 `AIDLC_RELEASE_BASE_URL` and `AIDLC_CA_BUNDLE` provide installer defaults;
 explicit options win. `AIDLC_RELEASE_REPOSITORY` selects both the GitHub
 repository used for default downloads and the repository trusted by provenance
-verification. It defaults to `awslabs/aidlc-workflows`.
+verification. It defaults to `awslabs/aidlc-workflows`. When it is set, the
+installer also saves it as the machine-config key `release-repository`, so
+later `aidlc update` runs stay on that repository without the variable.
 `AIDLC_RELEASE_WORKFLOW` overrides the trusted signer workflow. By default,
 installers select `<AIDLC_RELEASE_REPOSITORY>/.github/workflows/release.yml`
 for stable versions and
@@ -565,7 +567,7 @@ project only the machine layer is valid, so `--global` is inferred. `--show`
 labels each effective value with its winning source.
 
 All three files use one strict schema. Unknown keys fail closed, and
-update/release keys such as `offline` and `release-base-url` are machine-only.
+update/release keys such as `offline`, `release-base-url` and `release-repository` are machine-only.
 Editors can reference the generated
 `<harness>/tools/data/aidlc-settings.schema.json`; no defaults settings file is
 written.
@@ -1656,10 +1658,11 @@ default order:
 |---------|-------------|----------------|
 | Offline | `AIDLC_OFFLINE=1` (`0` explicitly enables network) | `aidlc system config global set offline on` |
 | Mirror | `AIDLC_RELEASE_BASE_URL` | `aidlc system config global set release-base-url <url>` |
+| Release repository | `AIDLC_RELEASE_REPOSITORY` | `aidlc system config global set release-repository <owner/name>` |
 | Preview releases API | `AIDLC_RELEASE_API_URL` (or `aidlc update --release-api-url <url>`) | derived from the mirror for `github.com`; not a machine config key |
 | CA bundle | `AIDLC_CA_BUNDLE` | `aidlc system config global set ca-bundle <absolute-path>` |
 
-Manage the four machine keys:
+Manage the machine keys:
 
 ```bash
 aidlc system config global list
@@ -1667,11 +1670,21 @@ aidlc system config global get update-check
 aidlc system config global set update-check off
 aidlc system config global set offline on
 aidlc system config global set release-base-url https://mirror.example/releases
+aidlc system config global set release-repository myorg/aidlc-workflows
 aidlc system config global set ca-bundle /absolute/path/corporate-ca.pem
 aidlc system config global clear ca-bundle
 ```
 
-The keys are `update-check`, `offline`, `release-base-url`, and `ca-bundle`.
+The keys are `update-check`, `offline`, `release-base-url`,
+`release-repository`, and `ca-bundle`.
+
+`release-repository` (`owner/name`) selects the GitHub repository for default
+downloads and the repository trusted by provenance verification, so a fork
+needs no environment variable after install. `AIDLC_RELEASE_REPOSITORY` wins
+over it, and a mirror set with `release-base-url` still wins for the download
+URL. `aidlc doctor` shows a `Release source:` row whenever the repository is
+not the default, naming whether it came from the environment or the machine
+config.
 Boolean values accept `true|false`, `on|off`, `1|0`, or `yes|no`.
 `aidlc config <get|set|clear|list> ... --global` is equivalent.
 

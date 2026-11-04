@@ -39,6 +39,7 @@ export type MachineConfig = {
   "update-check"?: boolean;
   offline?: boolean;
   "release-base-url"?: string;
+  "release-repository"?: string;
   "ca-bundle"?: string;
 };
 
@@ -48,6 +49,7 @@ const CONFIG_KEYS: readonly MachineConfigKey[] = [
   "update-check",
   "offline",
   "release-base-url",
+  "release-repository",
   "ca-bundle",
 ];
 
@@ -100,6 +102,30 @@ export function writeMachineChannel(value: string): ReleaseChannel {
   return channel;
 }
 
+export const DEFAULT_RELEASE_REPOSITORY = "awslabs/aidlc-workflows";
+
+export function validReleaseRepository(value: string): boolean {
+  return /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(value);
+}
+
+export type ReleaseRepositorySource = "environment" | "machine config" | "default";
+
+// One owner for the release repository: AIDLC_RELEASE_REPOSITORY, then the
+// machine config's release-repository, then the default. It drives both the
+// download URL and the attestation trust root.
+export function resolvedReleaseRepository(): {
+  repository: string;
+  source: ReleaseRepositorySource;
+} {
+  const env = process.env.AIDLC_RELEASE_REPOSITORY;
+  if (env !== undefined) return { repository: env, source: "environment" };
+  const configured = readMachineConfig()["release-repository"];
+  if (configured !== undefined) {
+    return { repository: configured, source: "machine config" };
+  }
+  return { repository: DEFAULT_RELEASE_REPOSITORY, source: "default" };
+}
+
 function validReleaseUrl(value: string): boolean {
   try {
     const parsed = new URL(value);
@@ -145,6 +171,13 @@ function validateMachineConfig(value: unknown): MachineConfig {
     );
   }
   if (
+    record["release-repository"] !== undefined &&
+    (typeof record["release-repository"] !== "string" ||
+      !validReleaseRepository(record["release-repository"]))
+  ) {
+    throw new Error("machine config release-repository must be owner/name");
+  }
+  if (
     record["ca-bundle"] !== undefined &&
     (typeof record["ca-bundle"] !== "string" ||
       !isAbsolute(record["ca-bundle"]))
@@ -166,6 +199,9 @@ export function readMachineConfig(): MachineConfig {
       ...(settings?.offline !== undefined ? { offline: settings.offline } : {}),
       ...(settings?.["release-base-url"] !== undefined
         ? { "release-base-url": settings["release-base-url"] }
+        : {}),
+      ...(settings?.["release-repository"] !== undefined
+        ? { "release-repository": settings["release-repository"] }
         : {}),
       ...(settings?.["ca-bundle"] !== undefined
         ? { "ca-bundle": settings["ca-bundle"] }
@@ -250,6 +286,12 @@ function parseValue(key: MachineConfigKey, value: string): string | boolean {
       );
     }
     return value.replace(/\/+$/, "");
+  }
+  if (key === "release-repository") {
+    if (!validReleaseRepository(value)) {
+      throw new Error("release-repository must be owner/name");
+    }
+    return value;
   }
   if (!isAbsolute(value)) throw new Error("ca-bundle must be an absolute path");
   return value;
