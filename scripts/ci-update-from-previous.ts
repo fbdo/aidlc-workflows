@@ -36,12 +36,13 @@ import { KIRO_HOOK_GROUPS } from "../harness/kiro-ide/hooks/aidlc-kiro-tool-name
 import kiro from "../harness/kiro/manifest.ts";
 import type { WorkResult } from "../tests/harness/work-open.ts";
 
-export const HARNESSES = ["claude", "codex", "copilot", "cursor", "kiro", "kiro-ide", "opencode"] as const;
+export const HARNESSES = ["claude", "codex", "copilot", "cursor", "jcode", "kiro", "kiro-ide", "opencode"] as const;
 const HARNESS_DIRS: Record<(typeof HARNESSES)[number], string> = {
   claude: ".claude",
   codex: ".codex",
   copilot: ".github",
   cursor: ".cursor",
+  jcode: ".jcode",
   kiro: ".kiro",
   "kiro-ide": ".kiro",
   opencode: ".opencode",
@@ -52,6 +53,7 @@ const COPY_TOOL_DIRS: Record<(typeof HARNESSES)[number], string> = {
   codex: ".codex",
   copilot: ".aidlc",
   cursor: ".cursor",
+  jcode: ".jcode",
   kiro: ".kiro",
   "kiro-ide": ".kiro",
   opencode: ".aidlc",
@@ -93,6 +95,18 @@ const PERSON_GIT = {
 export function uncheckedHarnesses(versionJson: unknown): string[] {
   const listed = (versionJson as { distributions?: Array<{ name?: unknown }> } | null)?.distributions ?? [];
   return listed.map((entry) => String(entry?.name ?? "")).filter((name) => !(HARNESSES as readonly string[]).includes(name));
+}
+
+export function previousDistributions(previous: string): Set<string> | null {
+  const got = spawnSync("curl", ["-fsSL", `https://github.com/${REPOSITORY}/releases/download/v${previous}/version.json`],
+    { encoding: "utf-8", timeout: STEP_TIMEOUT_MS });
+  if (got.status !== 0) return null;
+  try {
+    const listed = (JSON.parse(got.stdout) as { distributions?: Array<{ name?: unknown }> }).distributions;
+    return Array.isArray(listed) ? new Set(listed.map((entry) => String(entry?.name ?? ""))) : null;
+  } catch {
+    return null;
+  }
 }
 
 export function hookCommands(treeDir: string): string[] {
@@ -357,7 +371,13 @@ async function check(previous: string, candidate: string, target: string, root: 
   }
 
   // 2. A project for every harness, the person's own code committed, set up by the previous release.
-  const projects = HARNESSES.map((harness) => {
+  // A harness the previous release did not ship (jcode, on the first release that carries it) has nothing to update from.
+  const shippedBefore = previousDistributions(previous);
+  if (shippedBefore === null) {
+    console.error(`Could not read the harnesses ${previous} shipped from its version.json release asset.`);
+    return 1;
+  }
+  const projects = HARNESSES.filter((harness) => shippedBefore.has(harness)).map((harness) => {
     const project = join(root, `project-${harness}`);
     mkdirSync(project, { recursive: true });
     spawnSync("git", ["init", "--quiet", project], { encoding: "utf-8", timeout: STEP_TIMEOUT_MS });
