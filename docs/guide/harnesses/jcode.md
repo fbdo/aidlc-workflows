@@ -67,3 +67,6 @@ Framework developers can run `bun scripts/package.ts jcode` and copy the ignored
 ```bash
 aidlc doctor
 ```
+
+Doctor fails when `.jcode/config.toml` has no `[hooks]` row that calls the
+jcode adapter.

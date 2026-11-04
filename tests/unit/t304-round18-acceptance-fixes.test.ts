@@ -1582,7 +1582,7 @@ describe("t304 first-run prompt and detection safety", () => {
   }, NATIVE_FIXTURE_SETUP_TIMEOUT_MS);
 
   test("Kiro recommended defaults record no provider answer", () => {
-    const result = runWizard("5\n\n");
+    const result = runWizard("6\n\n");
     expect(result.status, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).toContain(
       "no provider settings; model access comes with Kiro CLI",
@@ -1600,7 +1600,7 @@ describe("t304 first-run prompt and detection safety", () => {
   test("changing the harness at the summary re-derives the provider answer", () => {
     // Claude Code first (1), customize (2), accept every step, then edit step 1
     // to Kiro CLI (5) and apply.
-    const toKiro = runWizard("1\n2\n\n\n\n\n\n\n1\n5\n\n");
+    const toKiro = runWizard("1\n2\n\n\n\n\n\n\n1\n6\n\n");
     expect(toKiro.status, toKiro.stdout + toKiro.stderr).toBe(0);
     expect(toKiro.stdout).toContain("2. Provider     keep current");
     // On Kiro CLI the row is the session model (personal Kiro settings); Kiro
@@ -1618,7 +1618,7 @@ describe("t304 first-run prompt and detection safety", () => {
     // when Kiro's settings cannot be read), then edit step 1 to Claude Code (1)
     // and apply.
     // Ending on Claude Code, setup then asks the status line question (#1407).
-    const toClaude = runWizard("5\n2\n\n\n\n\n\n1\n1\n\n\n");
+    const toClaude = runWizard("6\n2\n\n\n\n\n\n1\n1\n\n\n");
     expect(toClaude.status, toClaude.stdout + toClaude.stderr).toBe(0);
     expect(toClaude.stdout).not.toContain("Claude Code provides its own model access");
     expect(toClaude.stdout).toContain("2. Provider     keep current");
