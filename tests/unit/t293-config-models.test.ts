@@ -390,6 +390,7 @@ describe("t293 model policy resolution", () => {
       ["codex", ".codex"],
       ["copilot", ".aidlc"],
       ["cursor", ".cursor"],
+      ["jcode", ".jcode"],
       ["kiro", ".kiro"],
       ["kiro-ide", ".kiro"],
       ["opencode", ".aidlc"],
@@ -1786,6 +1787,7 @@ describe("t293 doctor model policy advisory", () => {
       ["codex", ".codex"],
       ["copilot", ".aidlc"],
       ["cursor", ".cursor"],
+      ["jcode", ".jcode"],
       ["kiro", ".kiro"],
       ["kiro-ide", ".kiro"],
       ["opencode", ".aidlc"],
@@ -1796,7 +1798,7 @@ describe("t293 doctor model policy advisory", () => {
       expect(HARNESS_PRODUCT_NAMES[harness], harness).toBe(shipped.productName);
     }
     expect(Object.keys(HARNESS_PRODUCT_NAMES).sort()).toEqual(
-      ["claude", "codex", "copilot", "cursor", "kiro", "kiro-ide", "opencode"],
+      ["claude", "codex", "copilot", "cursor", "jcode", "kiro", "kiro-ide", "opencode"],
     );
   });
 

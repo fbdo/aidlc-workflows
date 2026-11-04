@@ -105,6 +105,13 @@ export function coreCalls(toolName: string, input: Json, projectDir: string): Co
 
 // The text of a core hook's JSON context output, for the channels jcode adds
 // to the model's view as plain text.
+function feedbackText(coreStdout: string): string {
+  const text = contextText(coreStdout);
+  if (text) return text;
+  const message = asRecord(parseJson(coreStdout)).systemMessage;
+  return typeof message === "string" ? message : "";
+}
+
 function contextText(coreStdout: string): string {
   const trimmed = coreStdout.trim();
   if (!trimmed) return "";
@@ -328,11 +335,7 @@ export async function run(target: string, input: string, _extraArgs: string[] = 
             tool_input: { command: typeof stdinJson.command === "string" ? stdinJson.command : "" },
           }),
         );
-        const text = contextText(r.stdout) ||
-          (() => {
-            const message = asRecord(parseJson(r.stdout)).systemMessage;
-            return typeof message === "string" ? message : "";
-          })();
+        const text = feedbackText(r.stdout);
         if (text) out.push(text);
       } else {
         for (const call of coreCalls(toolName, stdinJson, projectDir)) {
@@ -343,8 +346,10 @@ export async function run(target: string, input: string, _extraArgs: string[] = 
             cwd: projectDir,
             ...call,
           });
-          await runCore("aidlc-write-audit-log.ts", payload);
-          await runCore("aidlc-run-sensors.ts", payload);
+          for (const hook of ["aidlc-write-audit-log.ts", "aidlc-run-sensors.ts"]) {
+            const text = feedbackText((await runCore(hook, payload)).stdout);
+            if (text) out.push(text);
+          }
         }
       }
       if (out.length > 0) process.stdout.write(`${out.join("\n")}\n`);

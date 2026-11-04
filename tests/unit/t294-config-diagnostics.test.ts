@@ -7898,3 +7898,27 @@ describe("t294 a Claude Bedrock answer stays the person's own", () => {
     });
   });
 });
+
+describe("jcode hook wiring check", () => {
+  test("a [hooks] table with no jcode adapter rows fails, one with them passes", async () => {
+    const project = mkdtempSync(join(tmpdir(), "aidlc-jcode-doctor-"));
+    const previous = process.env.AIDLC_HARNESS_DIR;
+    process.env.AIDLC_HARNESS_DIR = ".jcode";
+    try {
+      mkdirSync(join(project, ".jcode"), { recursive: true });
+      const configPath = join(project, ".jcode", "config.toml");
+      const wiring = async () => {
+        const report = await collectDoctorReport(project);
+        return report.checks.find((check) => check.label.includes("jcode adapter"));
+      };
+      writeFileSync(configPath, '[hooks]\nsession_start = "echo hi"\n');
+      expect((await wiring())?.pass).toBe(false);
+      writeFileSync(configPath, '[hooks]\nsession_start = "aidlc engine adapter jcode session-start"\n');
+      expect((await wiring())?.pass).toBe(true);
+    } finally {
+      if (previous === undefined) delete process.env.AIDLC_HARNESS_DIR;
+      else process.env.AIDLC_HARNESS_DIR = previous;
+      rmSync(project, { recursive: true, force: true });
+    }
+  });
+});

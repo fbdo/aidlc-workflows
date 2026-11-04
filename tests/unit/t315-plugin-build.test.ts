@@ -54,6 +54,7 @@ const EXPECTED_HARNESSES = [
   "codex",
   "copilot",
   "cursor",
+  "jcode",
   "kiro",
   "kiro-ide",
   "opencode",
