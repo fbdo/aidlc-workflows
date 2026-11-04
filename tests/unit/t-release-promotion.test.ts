@@ -528,7 +528,7 @@ describe("the stable page", () => {
 });
 
 describe("promotion workflow boundaries", () => {
-  type Job = { uses?: string; needs?: string[] | string; permissions?: Record<string, string>; steps?: Array<{ run?: string; env?: Record<string, string>; with?: Record<string, string> }> };
+  type Job = { uses?: string; needs?: string[] | string; permissions?: Record<string, string>; steps?: Array<{ id?: string; if?: string; name?: string; run?: string; env?: Record<string, string>; with?: Record<string, string> }> };
   const release = Bun.YAML.parse(readFileSync(join(REPO_ROOT, ".github/workflows/release.yml"), "utf8")) as { on: Record<string, unknown>; jobs: Record<string, Job> };
   test.each([
     [{ PREVIEW, VERSION: "", NOTES: "" }, ["version", "notes"]],
