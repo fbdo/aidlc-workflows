@@ -141,3 +141,38 @@ describe.skipIf(!existsSync(adapterPath))("jcode delegated predicate", () => {
     expect(src).toMatch(/JCODE_HOOK_SWARM_ID && agentType\) return 0/);
   });
 });
+
+describe("jcode MCP registry", () => {
+  const read = (path: string) => JSON.parse(readFileSync(join(ROOT, path), "utf8")) as { mcpServers: Record<string, unknown> };
+
+  test("ships the same servers as the Claude harness, aws-mcp args unchanged", () => {
+    const jcode = read("harness/jcode/.mcp.json");
+    expect(jcode).toEqual(read("harness/claude/.mcp.json"));
+    expect(Object.keys(jcode.mcpServers).sort()).toEqual(["aws-iac", "aws-mcp", "aws-pricing", "aws-serverless", "context7"]);
+    expect(JSON.stringify(jcode.mcpServers["aws-mcp"])).not.toContain("--read-only");
+  });
+
+  test("the packaged jcode tree carries it at the project root", () => {
+    const built = join(ROOT, "dist", "jcode", ".mcp.json");
+    if (!existsSync(built)) return;
+    expect(readFileSync(built, "utf8")).toBe(readFileSync(join(ROOT, "harness", "jcode", ".mcp.json"), "utf8"));
+  });
+
+  test("a project with both harnesses keeps one merged file with each server once", () => {
+    const native = (name: string) => join(ROOT, "dist-release", name);
+    if (!existsSync(native("jcode")) || !existsSync(native("claude"))) return;
+    const project = mkdtempSync(join(tmpdir(), "aidlc-jcode-mcp-"));
+    try {
+      mkdirSync(join(project, ".git"));
+      const init = join(native("claude"), ".claude", "tools", "aidlc-init.ts");
+      for (const name of ["claude", "jcode"]) {
+        const r = Bun.spawnSync([process.execPath, init, "config", "--project-dir", project, "--from", native(name), "--harness", name, "--mcp", "defaults", "--yes"], { cwd: project });
+        expect(r.exitCode, r.stdout.toString() + r.stderr.toString()).toBe(0);
+      }
+      const merged = JSON.parse(readFileSync(join(project, ".mcp.json"), "utf8")) as { mcpServers: Record<string, unknown> };
+      expect(Object.keys(merged.mcpServers).sort()).toEqual(["aws-iac", "aws-mcp", "aws-pricing", "aws-serverless", "context7"]);
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
+  });
+});

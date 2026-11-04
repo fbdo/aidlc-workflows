@@ -35,7 +35,7 @@ This is the same AI-DLC core that ships to every harness: the same ordered steps
 - The AI-DLC method (\`aidlc/spaces/<space>/memory/*.md\`) reaches each step through the engine itself: jcode has no include syntax for it.
 - There is **no statusline**; use \`/aidlc --status\` and the progress lines at gates.
 - Construction fan-out uses the \`swarm\` tool (\`spawn\` per unit with \`working_dir\` set to the unit's worktree, then \`await_members\`); \`AIDLC_USE_SWARM=1\` is a loud no-op.
-- **MCP servers**: none ship (configure your own in \`.jcode/mcp.json\` if needed).
+- **MCP servers (optional)**: \`.mcp.json\` (project root, beside \`.jcode/\`) declares the MCP servers available to the framework. \`context7\` (library/SDK documentation lookups) is an HTTP server that reads \`CONTEXT7_API_KEY\` from your environment. The four AWS servers (\`aws-mcp\`, \`aws-pricing\`, \`aws-iac\`, \`aws-serverless\`) launch via \`uvx\` and authenticate with your standard AWS credential chain, so they need an AWS account with IAM credentials available to your shell (install \`uv\`/\`uvx\` via \`curl -fsSL https://astral.sh/uv/install.sh | sh\`). All credentials flow through environment passthrough and no keys are committed. Servers you have no credentials for are simply unavailable and never block a workflow.
 - A workflow's \`aidlc/\` workspace tree is harness-neutral: a project can move between harness installs (supported but untested - keep the trees in sync via the framework's packaging if you do this).
 
 The jcode-specific guide (install, what differs, verification) is \`docs/guide/harnesses/jcode.md\`.
