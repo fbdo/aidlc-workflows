@@ -140,7 +140,7 @@ describe.skipIf(!existsSync(adapterPath))("jcode delegated predicate", () => {
     try {
       cpSync(join(ROOT, "dist", "jcode", ".jcode"), join(tmp, ".jcode"), { recursive: true });
       writeFileSync(join(tmp, ".jcode", "hooks", "aidlc-continue-workflow.ts"),
-        'export async function run(): Promise<number> {\n  process.stdout.write("CONTINUE-RAN");\n  return 0;\n}\n');
+        'process.stdout.write("CONTINUE-RAN");\n');
       const script = `const m = await import(${JSON.stringify(join(tmp, ".jcode", "hooks", "aidlc-jcode-adapter.ts"))});` +
         `process.exitCode = await m.run("continue-workflow", "{}");`;
       const r = Bun.spawnSync([process.execPath, "-e", script], {
