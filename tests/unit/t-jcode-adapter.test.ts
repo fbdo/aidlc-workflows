@@ -96,13 +96,18 @@ describe.skipIf(!existsSync(adapterPath))("jcode delegated predicate", () => {
   const SESSION = "sess_worker_one";
   const COORD = "sess_coord_one";
 
-  function runGuard(env: Record<string, string>, bound: boolean): { code: number; stderr: string } {
+  function runGuard(env: Record<string, string>, bound: boolean, intentExists = true): { code: number; stderr: string } {
     const tmp = mkdtempSync(join(tmpdir(), "aidlc-jcode-deleg-"));
     try {
       cpSync(join(ROOT, "dist", "jcode", ".jcode"), join(tmp, ".jcode"), { recursive: true });
       const sessions = join(tmp, "aidlc", ".aidlc-sessions");
       mkdirSync(sessions, { recursive: true });
       if (bound) {
+        if (intentExists) {
+          const intent = join(tmp, "aidlc", "spaces", "default", "intents", "i1");
+          mkdirSync(intent, { recursive: true });
+          writeFileSync(join(intent, "aidlc-state.md"), "# state\n");
+        }
         writeFileSync(join(sessions, `${COORD}.binding.json`),
           JSON.stringify({ space: "default", intent: "i1", boundAt: "2026-01-01T00:00:00Z", source: "create" }));
       }
@@ -133,6 +138,10 @@ describe.skipIf(!existsSync(adapterPath))("jcode delegated predicate", () => {
 
   test("a label-only worker whose coordinator is bound is delegated: next blocked", () => {
     expect(runGuard({ JCODE_HOOK_AGENT_TYPE: "lane" }, true).code).toBe(2);
+  });
+
+  test("a label-only worker whose coordinator binding names a deleted intent is the conductor", () => {
+    expect(runGuard({ JCODE_HOOK_AGENT_TYPE: "lane" }, true, false).code).toBe(0);
   });
 
   function runStop(env: Record<string, string>): string {

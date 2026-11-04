@@ -34,6 +34,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  readSessionBinding,
   runHookHere,
   sessionsDir,
   validSessionId,
@@ -141,12 +142,7 @@ function delegatedAgentType(projectDir: string): string {
   if (type !== (process.env.JCODE_HOOK_SWARM_LABEL ?? "") && /^aidlc-.+-agent$/.test(type)) return type;
   const coordinator = validSessionId(process.env.JCODE_HOOK_COORDINATOR_SESSION_ID);
   if (!coordinator) return "";
-  try {
-    const binding = asRecord(JSON.parse(readFileSync(join(sessionsDir(projectDir), `${coordinator}.binding.json`), "utf8")));
-    return typeof binding.intent === "string" && binding.intent ? type : "";
-  } catch {
-    return "";
-  }
+  return readSessionBinding(projectDir, coordinator)?.intent ? type : "";
 }
 
 export async function run(target: string, input: string, _extraArgs: string[] = []): Promise<number> {
