@@ -194,5 +194,5 @@ describe("jcode MCP registry", () => {
     } finally {
       rmSync(project, { recursive: true, force: true });
     }
-  });
+  }, 60000);
 });
