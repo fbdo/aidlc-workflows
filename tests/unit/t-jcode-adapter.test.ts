@@ -135,10 +135,30 @@ describe.skipIf(!existsSync(adapterPath))("jcode delegated predicate", () => {
     expect(runGuard({ JCODE_HOOK_AGENT_TYPE: "lane" }, true).code).toBe(2);
   });
 
-  test("the Stop continuation runs for a worker that conducts", () => {
-    const src = readFileSync(adapterPath, "utf8");
-    expect(src).toContain("delegatedAgentType(projectDir)");
-    expect(src).toMatch(/JCODE_HOOK_SWARM_ID && agentType\) return 0/);
+  function runStop(env: Record<string, string>): string {
+    const tmp = mkdtempSync(join(tmpdir(), "aidlc-jcode-stop-"));
+    try {
+      cpSync(join(ROOT, "dist", "jcode", ".jcode"), join(tmp, ".jcode"), { recursive: true });
+      writeFileSync(join(tmp, ".jcode", "hooks", "aidlc-continue-workflow.ts"),
+        'export async function run(): Promise<number> {\n  process.stdout.write("CONTINUE-RAN");\n  return 0;\n}\n');
+      const script = `const m = await import(${JSON.stringify(join(tmp, ".jcode", "hooks", "aidlc-jcode-adapter.ts"))});` +
+        `process.exitCode = await m.run("continue-workflow", "{}");`;
+      const r = Bun.spawnSync([process.execPath, "-e", script], {
+        cwd: tmp,
+        env: {
+          ...process.env, JCODE_PROJECT_DIR: tmp, AIDLC_HARNESS_DIR: ".jcode", JCODE_HOOK_SESSION_ID: SESSION,
+          JCODE_HOOK_SWARM_ID: "sw1", JCODE_HOOK_SWARM_LABEL: "lane", JCODE_HOOK_COORDINATOR_SESSION_ID: COORD, ...env,
+        },
+      });
+      return r.stdout.toString();
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  }
+
+  test("the Stop continuation runs for a worker that conducts, not for a persona worker", () => {
+    expect(runStop({ JCODE_HOOK_AGENT_TYPE: "lane" })).toContain("CONTINUE-RAN");
+    expect(runStop({ JCODE_HOOK_AGENT_TYPE: "aidlc-developer-agent" })).not.toContain("CONTINUE-RAN");
   });
 });
 
