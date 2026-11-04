@@ -4085,6 +4085,20 @@ export async function collectDoctorReport(
           .filter((name) => !pluginOwned.has(`${currentHarnessDir}/hooks/${name}`))
           .map((name) => join(hooksDir, name)));
       }
+      // jcode wires its hooks in the [hooks] table of .jcode/config.toml, not in
+      // JSON; the commands there are what the person approves with `jcode trust grant`.
+      if (currentHarnessDir === ".jcode") {
+        try {
+          const parsed = Bun.TOML.parse(readFileSync(join(harnessRoot, "config.toml"), "utf-8")) as {
+            hooks?: Record<string, unknown>;
+          };
+          for (const value of Object.values(parsed.hooks ?? {})) {
+            if (typeof value === "string") commands.push(value);
+          }
+        } catch {
+          // The jcode hook wiring row reports a missing or unreadable config.toml.
+        }
+      }
       for (const path of trustFiles) {
         if (!existsSync(path)) continue;
         try {
@@ -4146,6 +4160,10 @@ export async function collectDoctorReport(
       } else if (currentHarnessName === "copilot") {
         // Copilot has no project command allowlist. Its folder-trust contract
         // is checked separately below; this row verifies native hook wiring.
+        nativePermission = nativeHooks;
+      } else if (currentHarnessDir === ".jcode") {
+        // jcode has no project command allowlist: the hook table is the whole
+        // contract and the person's `jcode trust grant` is the approval.
         nativePermission = nativeHooks;
       } else if (currentHarnessName === "opencode") {
         const configPath = ["opencode.json", "opencode.jsonc"]
