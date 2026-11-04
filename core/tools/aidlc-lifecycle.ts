@@ -95,8 +95,11 @@ import {
   defaultHarnessPath,
   machineConfigPath,
   readMachineChannel,
+  readMachineConfig,
   updateCachePath,
+  validReleaseRepository,
   writeMachineChannel,
+  writeMachineConfig,
 } from "./aidlc-machine-config.ts";
 import {
   acquireRelease,
@@ -2988,6 +2991,12 @@ function installProfileCommand(argv: string[]): CommandResult {
 
 // The installers print what follows the first line of this message.
 async function installApplyCommand(argv: string[]): Promise<CommandResult> {
+  // The installer passes the repository it downloaded from, so later updates
+  // and attestation checks stay on it without the environment variable.
+  const repository = valueAfter(argv, "--release-repository");
+  if (repository !== undefined && !validReleaseRepository(repository)) {
+    return failure("--release-repository must be owner/name", 2);
+  }
   const installed = await installVersion({
     version: valueAfter(argv, "--version"),
     from: valueAfter(argv, "--from"),
@@ -2998,6 +3007,12 @@ async function installApplyCommand(argv: string[]): Promise<CommandResult> {
     caBundle: valueAfter(argv, "--ca-bundle"),
     replaceLauncher: windowsPosixLauncherReplacement(argv),
   });
+  if (repository !== undefined) {
+    const config = readMachineConfig();
+    if (config["release-repository"] !== repository) {
+      writeMachineConfig({ ...config, "release-repository": repository });
+    }
+  }
   return success(
     `installed ${installed.version}${
       installed.pluginCatalogue ? `\n${pluginCatalogueLine(installed.pluginCatalogue)}` : ""

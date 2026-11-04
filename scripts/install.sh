@@ -492,8 +492,12 @@ for asset in $ASSETS; do
 done
 
 chmod 755 "$TMP/$BINARY"
+# An explicitly chosen release repository is saved in the machine config, so
+# later `aidlc update` runs stay on it. The default is not saved.
+set --
+[ -z "${AIDLC_RELEASE_REPOSITORY:-}" ] || set -- --release-repository "$AIDLC_RELEASE_REPOSITORY"
 if ! "$TMP/$BINARY" system lifecycle install-apply --from "$TMP" --version "$VERSION" \
-  --quiet >"$TMP/apply.out" 2>"$TMP/apply.err"; then
+  "$@" --quiet >"$TMP/apply.out" 2>"$TMP/apply.err"; then
   case "$TARGET" in
     linux-*-musl)
       if command -v apk >/dev/null 2>&1 &&

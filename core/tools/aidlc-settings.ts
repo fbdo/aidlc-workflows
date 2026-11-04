@@ -122,6 +122,7 @@ export type AidlcSettingsFile = {
   "update-check"?: boolean;
   offline?: boolean;
   "release-base-url"?: string;
+  "release-repository"?: string;
   "ca-bundle"?: string;
 };
 
@@ -137,6 +138,7 @@ const MACHINE_KEYS = [
   "update-check",
   "offline",
   "release-base-url",
+  "release-repository",
   "ca-bundle",
 ] as const;
 export type MachineSettingsKey = (typeof MACHINE_KEYS)[number];
@@ -440,6 +442,15 @@ export function normalizeAidlcSettings(
     );
   }
   if (
+    value["release-repository"] !== undefined &&
+    (
+      typeof value["release-repository"] !== "string" ||
+      !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(value["release-repository"])
+    )
+  ) {
+    throw new Error(`${path}: settings.release-repository must be owner/name`);
+  }
+  if (
     value["ca-bundle"] !== undefined &&
     (
       typeof value["ca-bundle"] !== "string" ||
@@ -461,6 +472,9 @@ export function normalizeAidlcSettings(
     ...(typeof value.offline === "boolean" ? { offline: value.offline } : {}),
     ...(typeof value["release-base-url"] === "string"
       ? { "release-base-url": value["release-base-url"].replace(/\/+$/, "") }
+      : {}),
+    ...(typeof value["release-repository"] === "string"
+      ? { "release-repository": value["release-repository"] }
       : {}),
     ...(typeof value["ca-bundle"] === "string"
       ? { "ca-bundle": value["ca-bundle"] }
@@ -784,6 +798,7 @@ export const AIDLC_SETTINGS_SCHEMA = {
     "update-check": { type: "boolean" },
     offline: { type: "boolean" },
     "release-base-url": { type: "string" },
+    "release-repository": { type: "string" },
     "ca-bundle": { type: "string" },
     models: {
       type: "object",

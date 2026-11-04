@@ -19,7 +19,11 @@ import {
   PREVIEW_VERSION,
   requireVersion,
 } from "./aidlc-channel.ts";
-import { resolvedReleaseSettings } from "./aidlc-machine-config.ts";
+import {
+  resolvedReleaseRepository,
+  resolvedReleaseSettings,
+  validReleaseRepository,
+} from "./aidlc-machine-config.ts";
 
 export type ReleaseAsset = {
   name: string;
@@ -130,7 +134,6 @@ const MAX_RELEASE_LIST_PAGE_BYTES = 4 * 1024 * 1024;
 const MAX_RELEASE_LIST_PAGES = 25;
 const PROGRESS_WIDTH = 72;
 const PROVENANCE_BUNDLE = "aidlc-release.intoto.jsonl";
-const DEFAULT_RELEASE_REPOSITORY = "awslabs/aidlc-workflows";
 const GITHUB_API_HEADERS = {
   Accept: "application/vnd.github+json",
   "User-Agent": "aidlc-native-lifecycle",
@@ -138,8 +141,7 @@ const GITHUB_API_HEADERS = {
 };
 
 function releaseTrust(version: string): { repository: string; workflow: string } {
-  const repository =
-    process.env.AIDLC_RELEASE_REPOSITORY ?? DEFAULT_RELEASE_REPOSITORY;
+  const { repository } = resolvedReleaseRepository();
   const workflowName = parseVersion(version).channel === PREVIEW_CHANNEL
     ? "preview-release.yml"
     : "release.yml";
@@ -150,10 +152,13 @@ function releaseTrust(version: string): { repository: string; workflow: string }
 }
 
 function defaultReleaseBaseUrl(): string {
-  const repository =
-    process.env.AIDLC_RELEASE_REPOSITORY ?? DEFAULT_RELEASE_REPOSITORY;
-  if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) {
-    throw new Error("AIDLC_RELEASE_REPOSITORY must be owner/name");
+  const { repository, source } = resolvedReleaseRepository();
+  if (!validReleaseRepository(repository)) {
+    throw new Error(
+      source === "environment"
+        ? "AIDLC_RELEASE_REPOSITORY must be owner/name"
+        : "release-repository must be owner/name",
+    );
   }
   return `https://github.com/${repository}/releases`;
 }
