@@ -7922,3 +7922,52 @@ describe("jcode hook wiring check", () => {
     }
   });
 });
+
+describe("jcode native command trust", () => {
+  test("a compiled install's jcode config.toml hooks count as native trust; Bun-shaped rows do not", async () => {
+    const project = temp("aidlc-t294-jcode-trust-");
+    cpSync(join(DIST_RELEASE, "jcode"), project, { recursive: true });
+    const harnessRoot = join(project, ".jcode");
+    const machine = temp("aidlc-t294-jcode-trust-machine-");
+    const overrides = {
+      AIDLC_HARNESS_DIR: ".jcode",
+      AIDLC_HARNESS_NAME: "jcode",
+      AIDLC_RUNTIME_HARNESS_ROOT: harnessRoot,
+      AIDLC_RUNTIME_ROOT: DIST_RELEASE,
+      AIDLC_INSTALL_ROOT: machine,
+      AIDLC_BIN_DIR: join(machine, "bin"),
+      AIDLC_OFFLINE: "1",
+      ...hookPathEnv(),
+    };
+    const previous = new Map(Object.keys(overrides).map((key) => [key, process.env[key]]));
+    const compiled = spyOn(runtimePaths, "isCompiledExecutable").mockReturnValue(true);
+    const nativeTrust = async () => {
+      const report = await collectDoctorReport(project);
+      const rows = report.checks.filter((check) => check.label.startsWith("Native command trust"));
+      expect(rows).toHaveLength(1);
+      return rows[0];
+    };
+    try {
+      Object.assign(process.env, overrides);
+      const shipped = await nativeTrust();
+      expect(shipped.pass, shipped.label).toBe(true);
+      writeFileSync(
+        join(harnessRoot, "config.toml"),
+        '[hooks]\nsession_start = "bun .jcode/tools/aidlc.ts engine adapter jcode session-start"\n',
+      );
+      const legacy = await nativeTrust();
+      expect(legacy.pass).toBe(false);
+      expect(legacy.label).toContain("1 Bun-shaped entry");
+      writeFileSync(join(harnessRoot, "config.toml"), "[hooks]\n");
+      const empty = await nativeTrust();
+      expect(empty.pass).toBe(false);
+      expect(empty.label).toContain("native hooks missing");
+    } finally {
+      compiled.mockRestore();
+      for (const [key, value] of previous) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    }
+  });
+});
