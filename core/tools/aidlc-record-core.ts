@@ -382,6 +382,22 @@ export function sessionsDir(projectDir: string): string {
   return join(workspaceRoot(projectDir), SESSIONS_DIR);
 }
 
+// The jcode adapter touches this marker on every hook event, so its absence
+// for the session driving the engine means the project's hooks never fired
+// there (the chat was opened outside the project).
+export function jcodeHookedMarker(projectDir: string, sessionId: string): string {
+  return join(sessionsDir(projectDir), "jcode-sessions", `${sessionId}.hooked`);
+}
+
+// One advisory line when the engine runs under jcode in a chat whose hooks
+// have not fired; null everywhere else. Never a refusal.
+export function jcodeHooksNotRunningLine(projectDir: string): string | null {
+  const sessionId = validSessionId(process.env.JCODE_SESSION_ID);
+  if (!sessionId) return null;
+  if (existsSync(jcodeHookedMarker(projectDir, sessionId))) return null;
+  return `jcode's AI-DLC hooks are not running in this chat because it was opened outside the project. Open jcode in ${projectDir} (or spawn the conductor with working_dir there).`;
+}
+
 // The per-session record file: `aidlc/.aidlc-sessions/<session-id>`. Session
 // ids must already match the canonical safe shape; normalization-changing
 // values are rejected so distinct raw identities cannot alias one record.

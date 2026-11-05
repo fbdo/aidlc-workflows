@@ -560,7 +560,7 @@ import {
   optionsList,
   turnsPersonCheckOff,
 } from "./aidlc-lib.ts";
-import { chatTookStep } from "./aidlc-record-core.ts";
+import { chatTookStep, jcodeHooksNotRunningLine } from "./aidlc-record-core.ts";
 import { readRequestFile, REQUEST_FILE_USAGE, reviewRecoverySpentMessage, reviewVerdictStep } from "./aidlc-log.ts";
 import { LOCK_FOLDER_HELD_STEP_KEY, lockFolderHeldAgentStep } from "./aidlc-lock-line.ts";
 import {
@@ -10585,6 +10585,10 @@ function routeNext(agentArgs: string[], projectDir: string | undefined): void {
   // Only the park branches still see a resume that carried words.
   const resuming = flags.resume === true || withoutResume !== null;
   handOutSettingsLine(flags, resolveProjectDir(projectDir));
+  if (harnessDir() === ".jcode" && !isReadOnlyEngineProbe()) {
+    const hooksLine = jcodeHooksNotRunningLine(resolveProjectDir(projectDir));
+    if (hooksLine) sayWithStepOnce(resolveProjectDir(projectDir), hooksLine);
+  }
   pickingUp = flags.resume === true;
 
   // Turn-shape marker: a `next` that ASKS FOR THE NEXT MOVE is engagement with

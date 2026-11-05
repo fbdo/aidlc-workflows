@@ -145,6 +145,15 @@ export async function run(target: string, input: string, _extraArgs: string[] = 
     process.env.AIDLC_SESSION_OVERRIDE = sessionId;
     process.env.AIDLC_SESSION_OVERRIDE_SOURCE = "payload";
   }
+  if (sessionId) {
+    // Liveness for the engine: its `next` and doctor warn when this is missing.
+    try {
+      mkdirSync(startedSessions(projectDir), { recursive: true });
+      writeFileSync(join(startedSessions(projectDir), `${sessionId}.hooked`), "", "utf-8");
+    } catch {
+      // observability only
+    }
+  }
   const toolName = process.env.JCODE_HOOK_TOOL_NAME ?? (typeof envPayload.tool_name === "string" ? envPayload.tool_name : "");
   const agentType = process.env.JCODE_HOOK_AGENT_TYPE ?? "";
   const projectPins = { AIDLC_PROJECT_DIR: projectDir, CLAUDE_PROJECT_DIR: projectDir };
@@ -204,6 +213,7 @@ export async function run(target: string, input: string, _extraArgs: string[] = 
       try {
         rmSync(join(startedSessions(projectDir), `${sessionId}.started`), { force: true });
         rmSync(join(startedSessions(projectDir), `${sessionId}.pending`), { force: true });
+        rmSync(join(startedSessions(projectDir), `${sessionId}.hooked`), { force: true });
       } catch {
         // observability only
       }
