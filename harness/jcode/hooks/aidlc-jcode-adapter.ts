@@ -213,6 +213,7 @@ export async function run(target: string, input: string, _extraArgs: string[] = 
       try {
         rmSync(join(startedSessions(projectDir), `${sessionId}.started`), { force: true });
         rmSync(join(startedSessions(projectDir), `${sessionId}.pending`), { force: true });
+        rmSync(join(startedSessions(projectDir), `${sessionId}.hooked`), { force: true });
       } catch {
         // observability only
       }
