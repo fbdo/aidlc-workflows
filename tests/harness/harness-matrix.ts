@@ -141,7 +141,7 @@ const HARNESS_CAPABILITIES = {
       dist: "AGENTS.md",
       harnessDist: ".jcode/prompt-overlay.md",
     },
-    rootFiles: [".gitignore", "AGENTS.md"],
+    rootFiles: [".gitignore", "AGENTS.md", ".mcp.json"],
     skillsRoot: ".jcode/skills",
     plugin: {
       kind: "store",

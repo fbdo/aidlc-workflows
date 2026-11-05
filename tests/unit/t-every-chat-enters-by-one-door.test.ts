@@ -132,7 +132,8 @@ describe("every chat enters by one door", () => {
 // library, a binding is read only by the named pure readers, each with a chat
 // the engine has already resolved (SessionStart's pre-existing binding for the
 // rebind offer, the session end, the observed creation, the Kiro IDE adapter's
-// startup-or-resume check, and the statusline's display-only lite copy); the
+// startup-or-resume check, the jcode adapter's coordinator-bound check for a
+// swarm worker, and the statusline's display-only lite copy); the
 // helper-of record is read by nobody else; and no hook or adapter hands an id to
 // the cursor readers, which take a project and a space only.
 describe("the pin: nothing else reads a binding or the cursor with a raw id", () => {
@@ -143,6 +144,7 @@ describe("the pin: nothing else reads a binding or the cursor with a raw id", ()
     "core/hooks/aidlc-session-end.ts",
     "core/hooks/aidlc-rebuild-stage-graph.ts",
     "core/hooks/aidlc-statusline.ts",
+    "harness/jcode/hooks/aidlc-jcode-adapter.ts",
     "harness/kiro-ide/hooks/aidlc-kiro-adapter.ts",
   ]);
   function sources(root: string): string[] {

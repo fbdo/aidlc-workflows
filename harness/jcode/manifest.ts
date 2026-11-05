@@ -45,6 +45,12 @@ const manifest: HarnessManifest = {
       marker: "agents",
       shared: "identical",
     },
+    {
+      path: ".mcp.json",
+      policy: "json-map",
+      jsonKey: "mcpServers",
+      optional: true,
+    },
   ],
 
   coreDirs: [
@@ -68,6 +74,10 @@ const manifest: HarnessManifest = {
     { src: "skills/aidlc/tables.md", dst: "skills/aidlc/tables.md" },
     { src: "hooks/aidlc-jcode-adapter.ts", dst: "hooks/aidlc-jcode-adapter.ts" },
     { src: "dot-gitignore", dst: ".gitignore", projectRoot: true },
+    // The same MCP-server registry Claude ships, merged entry by entry: a
+    // project that also has a Claude install keeps one file, and an entry the
+    // person already owns is never replaced.
+    { src: ".mcp.json", dst: ".mcp.json", projectRoot: true },
   ],
 
   // The root AGENTS.md stays neutral and identical to the other sharing

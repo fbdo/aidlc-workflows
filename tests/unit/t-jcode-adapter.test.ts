@@ -4,7 +4,7 @@
 // covers: hook:aidlc-record-human-turn
 
 import { describe, expect, test } from "bun:test";
-import { cpSync, existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { emitConfigToml } from "../../harness/jcode/emit.ts";
@@ -90,4 +90,118 @@ describe.skipIf(!existsSync(adapterPath))("jcode post-tool feedback", () => {
       rmSync(tmp, { recursive: true, force: true });
     }
   });
+});
+
+describe.skipIf(!existsSync(adapterPath))("jcode delegated predicate", () => {
+  const SESSION = "sess_worker_one";
+  const COORD = "sess_coord_one";
+
+  function runGuard(env: Record<string, string>, bound: boolean, intentExists = true): { code: number; stderr: string } {
+    const tmp = mkdtempSync(join(tmpdir(), "aidlc-jcode-deleg-"));
+    try {
+      cpSync(join(ROOT, "dist", "jcode", ".jcode"), join(tmp, ".jcode"), { recursive: true });
+      const sessions = join(tmp, "aidlc", ".aidlc-sessions");
+      mkdirSync(sessions, { recursive: true });
+      if (bound) {
+        if (intentExists) {
+          const intent = join(tmp, "aidlc", "spaces", "default", "intents", "i1");
+          mkdirSync(intent, { recursive: true });
+          writeFileSync(join(intent, "aidlc-state.md"), "# state\n");
+        }
+        writeFileSync(join(sessions, `${COORD}.binding.json`),
+          JSON.stringify({ space: "default", intent: "i1", boundAt: "2026-01-01T00:00:00Z", source: "create" }));
+      }
+      const payload = JSON.stringify({ command: "aidlc engine orchestrate next" });
+      const script = `const m = await import(${JSON.stringify(join(tmp, ".jcode", "hooks", "aidlc-jcode-adapter.ts"))});` +
+        `process.exitCode = await m.run("guard-tool-call", ${JSON.stringify(payload)});`;
+      const r = Bun.spawnSync([process.execPath, "-e", script], {
+        cwd: tmp,
+        env: {
+          ...process.env, JCODE_PROJECT_DIR: tmp, JCODE_HOOK_TOOL_NAME: "bash", AIDLC_HARNESS_DIR: ".jcode",
+          JCODE_HOOK_SESSION_ID: SESSION, JCODE_HOOK_SWARM_ID: "sw1", JCODE_HOOK_SWARM_LABEL: "lane",
+          JCODE_HOOK_COORDINATOR_SESSION_ID: COORD, ...env,
+        },
+      });
+      return { code: r.exitCode ?? -1, stderr: r.stderr.toString() };
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  }
+
+  test("a label-only worker with an unbound coordinator is the conductor: next allowed", () => {
+    expect(runGuard({ JCODE_HOOK_AGENT_TYPE: "lane" }, false).code).toBe(0);
+  });
+
+  test("a persona worker is delegated: next blocked", () => {
+    expect(runGuard({ JCODE_HOOK_AGENT_TYPE: "aidlc-developer-agent" }, false).code).toBe(2);
+  });
+
+  test("a label-only worker whose coordinator is bound is delegated: next blocked", () => {
+    expect(runGuard({ JCODE_HOOK_AGENT_TYPE: "lane" }, true).code).toBe(2);
+  });
+
+  test("a label-only worker whose coordinator binding names a deleted intent is the conductor", () => {
+    expect(runGuard({ JCODE_HOOK_AGENT_TYPE: "lane" }, true, false).code).toBe(0);
+  });
+
+  function runStop(env: Record<string, string>): string {
+    const tmp = mkdtempSync(join(tmpdir(), "aidlc-jcode-stop-"));
+    try {
+      cpSync(join(ROOT, "dist", "jcode", ".jcode"), join(tmp, ".jcode"), { recursive: true });
+      writeFileSync(join(tmp, ".jcode", "hooks", "aidlc-continue-workflow.ts"),
+        'process.stdout.write("CONTINUE-RAN");\n');
+      const script = `const m = await import(${JSON.stringify(join(tmp, ".jcode", "hooks", "aidlc-jcode-adapter.ts"))});` +
+        `process.exitCode = await m.run("continue-workflow", "{}");`;
+      const r = Bun.spawnSync([process.execPath, "-e", script], {
+        cwd: tmp,
+        env: {
+          ...process.env, JCODE_PROJECT_DIR: tmp, AIDLC_HARNESS_DIR: ".jcode", JCODE_HOOK_SESSION_ID: SESSION,
+          JCODE_HOOK_SWARM_ID: "sw1", JCODE_HOOK_SWARM_LABEL: "lane", JCODE_HOOK_COORDINATOR_SESSION_ID: COORD, ...env,
+        },
+      });
+      return r.stdout.toString();
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  }
+
+  test("the Stop continuation runs for a worker that conducts, not for a persona worker", () => {
+    expect(runStop({ JCODE_HOOK_AGENT_TYPE: "lane" })).toContain("CONTINUE-RAN");
+    expect(runStop({ JCODE_HOOK_AGENT_TYPE: "aidlc-developer-agent" })).not.toContain("CONTINUE-RAN");
+  });
+});
+
+describe("jcode MCP registry", () => {
+  const read = (path: string) => JSON.parse(readFileSync(join(ROOT, path), "utf8")) as { mcpServers: Record<string, unknown> };
+
+  test("ships the same servers as the Claude harness, aws-mcp args unchanged", () => {
+    const jcode = read("harness/jcode/.mcp.json");
+    expect(jcode).toEqual(read("harness/claude/.mcp.json"));
+    expect(Object.keys(jcode.mcpServers).sort()).toEqual(["aws-iac", "aws-mcp", "aws-pricing", "aws-serverless", "context7"]);
+    expect(JSON.stringify(jcode.mcpServers["aws-mcp"])).not.toContain("--read-only");
+  });
+
+  test("the packaged jcode tree carries it at the project root", () => {
+    const built = join(ROOT, "dist", "jcode", ".mcp.json");
+    if (!existsSync(built)) return;
+    expect(readFileSync(built, "utf8")).toBe(readFileSync(join(ROOT, "harness", "jcode", ".mcp.json"), "utf8"));
+  });
+
+  test("a project with both harnesses keeps one merged file with each server once", () => {
+    const native = (name: string) => join(ROOT, "dist-release", name);
+    if (!existsSync(native("jcode")) || !existsSync(native("claude"))) return;
+    const project = mkdtempSync(join(tmpdir(), "aidlc-jcode-mcp-"));
+    try {
+      mkdirSync(join(project, ".git"));
+      const init = join(native("claude"), ".claude", "tools", "aidlc-init.ts");
+      for (const name of ["claude", "jcode"]) {
+        const r = Bun.spawnSync([process.execPath, init, "config", "--project-dir", project, "--from", native(name), "--harness", name, "--mcp", "defaults", "--yes"], { cwd: project });
+        expect(r.exitCode, r.stdout.toString() + r.stderr.toString()).toBe(0);
+      }
+      const merged = JSON.parse(readFileSync(join(project, ".mcp.json"), "utf8")) as { mcpServers: Record<string, unknown> };
+      expect(Object.keys(merged.mcpServers).sort()).toEqual(["aws-iac", "aws-mcp", "aws-pricing", "aws-serverless", "context7"]);
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
+  }, 60000);
 });

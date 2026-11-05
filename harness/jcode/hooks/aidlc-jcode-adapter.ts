@@ -34,6 +34,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  readSessionBinding,
   runHookHere,
   sessionsDir,
   validSessionId,
@@ -131,6 +132,19 @@ function startedSessions(projectDir: string): string {
   return join(sessionsDir(projectDir), "jcode-sessions");
 }
 
+// jcode reports the agent definition name, else the spawn label, as the agent
+// type. A worker is delegated only when that names an AI-DLC persona (not just
+// the label) or when its coordinator is already bound to an intent here. A
+// label-only worker under an unbound coordinator is the conductor itself.
+function delegatedAgentType(projectDir: string): string {
+  const type = process.env.JCODE_HOOK_AGENT_TYPE ?? "";
+  if (!type) return "";
+  if (type !== (process.env.JCODE_HOOK_SWARM_LABEL ?? "") && /^aidlc-.+-agent$/.test(type)) return type;
+  const coordinator = validSessionId(process.env.JCODE_HOOK_COORDINATOR_SESSION_ID);
+  if (!coordinator) return "";
+  return readSessionBinding(projectDir, coordinator)?.intent ? type : "";
+}
+
 export async function run(target: string, input: string, _extraArgs: string[] = []): Promise<number> {
   const envPayload = parseJson(process.env.JCODE_HOOK_PAYLOAD ?? "");
   const stdinJson = parseJson(input);
@@ -155,7 +169,7 @@ export async function run(target: string, input: string, _extraArgs: string[] = 
     }
   }
   const toolName = process.env.JCODE_HOOK_TOOL_NAME ?? (typeof envPayload.tool_name === "string" ? envPayload.tool_name : "");
-  const agentType = process.env.JCODE_HOOK_AGENT_TYPE ?? "";
+  const agentType = delegatedAgentType(projectDir);
   const projectPins = { AIDLC_PROJECT_DIR: projectDir, CLAUDE_PROJECT_DIR: projectDir };
   const projectEnv = { ...process.env, ...projectPins };
 
@@ -367,7 +381,7 @@ export async function run(target: string, input: string, _extraArgs: string[] = 
     }
 
     case "continue-workflow": {
-      // stop. A worker's own stop is its lead's to judge, not this loop's.
+      // stop. A delegated worker's own stop is its lead's to judge, not this loop's.
       if (process.env.JCODE_HOOK_SWARM_ID && agentType) return 0;
       const r = runCoreChild(
         "aidlc-continue-workflow.ts",
