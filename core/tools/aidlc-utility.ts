@@ -510,7 +510,7 @@ import {
   declaredProjectType,
   installWithoutReplacing,
 } from "./aidlc-lib.ts";
-import { chatTookStep } from "./aidlc-record-core.ts";
+import { chatTookStep, jcodeHooksNotRunningLine } from "./aidlc-record-core.ts";
 import { GUARD_POLICY_GLOSS, SCOPE_GLOSS } from "./aidlc-guard-fences.ts";
 import { validateStageFrontmatter } from "./aidlc-stage-schema.ts";
 import { isRuleStale } from "./aidlc-rule-schema.ts";
@@ -4891,6 +4891,15 @@ export async function collectDoctorReport(
       label: "config.toml present with [hooks] rows calling the jcode adapter (hook wiring)",
       fix: projectedFileRepair("jcode", ".jcode/config.toml"),
     });
+    const hooksLine = jcodeHooksNotRunningLine(projectDir);
+    if (hooksLine) {
+      results.push({
+        pass: false,
+        severity: "warn",
+        label: "jcode hooks have not fired for this chat (hooked marker missing)",
+        fix: hooksLine,
+      });
+    }
   } else {
     const settingsPath = join(projectDir, harness, "settings.json");
     results.push({
