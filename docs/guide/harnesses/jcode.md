@@ -69,4 +69,6 @@ aidlc doctor
 ```
 
 Doctor fails when `.jcode/config.toml` has no `[hooks]` row that calls the
-jcode adapter.
+jcode adapter. It warns, and `/aidlc` says so once, when the current jcode
+session has not fired any project hook, which happens in a chat opened outside
+the project; open the chat from the project directory and trust it.
