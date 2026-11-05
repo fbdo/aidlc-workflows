@@ -81,7 +81,7 @@ describe("jcode hook liveness wiring", () => {
     cpSync(DIST_JCODE, dir, { recursive: true });
     spawnSync("git", ["init", "-q"], { cwd: dir });
     const notices = (env: Record<string, string>): string[] => {
-      const child = { ...process.env, AIDLC_PROJECT_DIR: dir, ...env };
+      const child: Record<string, string | undefined> = { ...process.env, AIDLC_PROJECT_DIR: dir, ...env };
       delete child.JCODE_SESSION_ID;
       Object.assign(child, env);
       const r = spawnSync("bun", [`${dir}/.jcode/tools/aidlc-orchestrate.ts`, "next"], { cwd: dir, env: child, encoding: "utf-8" });
