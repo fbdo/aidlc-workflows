@@ -4,13 +4,16 @@
 // covers: function:jcodeHooksNotRunningLine, function:jcodeHookedMarker, hook:aidlc-jcode-adapter
 
 import { afterEach, describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { cpSync, existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { join } from "node:path";
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname } from "node:path";
 import { collectDoctorReport } from "../../core/tools/aidlc-utility.ts";
 import { jcodeHookedMarker, jcodeHooksNotRunningLine } from "../../core/tools/aidlc-record-core.ts";
 
+const DIST_JCODE = join(import.meta.dir, "..", "..", "dist", "jcode");
 const SID = "01jcode-session-abc";
 const saved = process.env.JCODE_SESSION_ID;
 const dirs: string[] = [];
@@ -73,10 +76,22 @@ describe("jcode hook liveness wiring", () => {
     }
   }, 60_000);
 
-  test("orchestrate next says the line once, only under the jcode harness and not on read-only probes", () => {
-    const src = readFileSync(new URL("../../core/tools/aidlc-orchestrate.ts", import.meta.url), "utf-8");
-    expect(src).toMatch(
-      /harnessDir\(\) === "\.jcode" && !isReadOnlyEngineProbe\(\)\) \{\s*const hooksLine = jcodeHooksNotRunningLine\(resolveProjectDir\(projectDir\)\);\s*if \(hooksLine\) sayWithStepOnce\(/,
-    );
-  });
+  test.skipIf(!existsSync(DIST_JCODE))("orchestrate next carries the line under jcode, and not with the marker or outside jcode", () => {
+    const dir = project();
+    cpSync(DIST_JCODE, dir, { recursive: true });
+    spawnSync("git", ["init", "-q"], { cwd: dir });
+    const notices = (env: Record<string, string>): string[] => {
+      const child = { ...process.env, AIDLC_PROJECT_DIR: dir, ...env };
+      delete child.JCODE_SESSION_ID;
+      Object.assign(child, env);
+      const r = spawnSync("bun", [`${dir}/.jcode/tools/aidlc-orchestrate.ts`, "next"], { cwd: dir, env: child, encoding: "utf-8" });
+      return (JSON.parse(r.stdout) as { change_notices?: string[] }).change_notices ?? [];
+    };
+    expect(notices({ JCODE_SESSION_ID: SID }).join("\n")).toContain(`Open jcode in ${dir}`);
+    expect(notices({}).join("\n")).not.toContain("hooks are not running");
+    const marker = jcodeHookedMarker(dir, SID);
+    mkdirSync(dirname(marker), { recursive: true });
+    writeFileSync(marker, "");
+    expect(notices({ JCODE_SESSION_ID: SID }).join("\n")).not.toContain("hooks are not running");
+  }, 120_000);
 });
