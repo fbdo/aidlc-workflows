@@ -170,7 +170,14 @@ export async function run(target: string, input: string, _extraArgs: string[] = 
   }
   const toolName = process.env.JCODE_HOOK_TOOL_NAME ?? (typeof envPayload.tool_name === "string" ? envPayload.tool_name : "");
   const agentType = delegatedAgentType(projectDir);
-  const projectPins = { AIDLC_PROJECT_DIR: projectDir, CLAUDE_PROJECT_DIR: projectDir };
+  // The native engine finds its tree by looking in .claude first, so with
+  // Claude Code installed here too a hook would run as Claude Code's.
+  const projectPins = {
+    AIDLC_PROJECT_DIR: projectDir,
+    CLAUDE_PROJECT_DIR: projectDir,
+    AIDLC_HARNESS_DIR: ".jcode",
+    AIDLC_HARNESS_NAME: "jcode",
+  };
   const projectEnv = { ...process.env, ...projectPins };
 
   // A core hook as a child process: the compiled engine runs it through its own
