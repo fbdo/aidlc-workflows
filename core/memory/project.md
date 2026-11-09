@@ -14,6 +14,8 @@
 <!-- Project-specific specialisation. Example: -->
 <!-- This monorepo requires package-scoped branch names and a package owner -->
 <!-- review in addition to the team's normal merge policy. -->
+<!-- A project that merges into another branch than team.md names says so on its own line, read before team.md's: -->
+<!-- - **Integration branch**: develop -->
 
 ## Walking Skeleton
 
@@ -53,14 +55,14 @@
 ## Forbidden
 
 <!-- Populated by practices-discovery affirmation gate. -->
-<!-- Format: NEVER [behavior] (affirmed [date]) -->
-<!-- Example: NEVER throw exceptions across service layer boundaries (affirmed 2026-05-17) -->
+<!-- Format: - NEVER [behavior] (affirmed [date]) -->
+<!-- Example: - NEVER throw exceptions across service layer boundaries (affirmed 2026-05-17) -->
 
 ## Mandated
 
 <!-- Populated by practices-discovery affirmation gate. -->
-<!-- Format: ALWAYS [behavior] (affirmed [date]) -->
-<!-- Example: ALWAYS use Result<T,E> for fallible operations in service layer (affirmed 2026-05-17) -->
+<!-- Format: - ALWAYS [behavior] (affirmed [date]) -->
+<!-- Example: - ALWAYS use Result<T,E> for fallible operations in service layer (affirmed 2026-05-17) -->
 
 ## Corrections
 

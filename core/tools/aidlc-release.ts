@@ -24,6 +24,7 @@ import {
   resolvedReleaseSettings,
   validReleaseRepository,
 } from "./aidlc-machine-config.ts";
+import { typedHarnessName } from "./aidlc-runtime-paths.ts";
 
 export type ReleaseAsset = {
   name: string;
@@ -985,8 +986,8 @@ export async function acquireCopyRuntime(options: {
     if (!manifest.distributions.some((item) => item.name === options.distribution)) {
       // Terminal, not a transport failure: no retry of this release fixes it.
       throw new Error(
-        `${version} does not include the ${options.distribution} harness; it has ${
-          manifest.distributions.map((item) => item.name).join(", ")
+        `${version} does not include the ${typedHarnessName(options.distribution)} harness; it has ${
+          manifest.distributions.map((item) => typedHarnessName(item.name)).sort().join(", ")
         }`,
       );
     }

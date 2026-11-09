@@ -5,7 +5,7 @@ structured, verifiable software-delivery workflows. One harness-neutral core
 runs natively in Claude Code, Kiro CLI, Kiro IDE, Codex CLI, Cursor, opencode, jcode,
 and GitHub Copilot.
 
-![version](https://img.shields.io/badge/version-2.11.2-blue)
+![version](https://img.shields.io/badge/version-2.11.3-blue)
 ![license](https://img.shields.io/badge/license-MIT--0-green)
 
 The Quick Start below installs the latest stable AI-DLC release.
@@ -56,14 +56,14 @@ aidlc config --harness claude
 aidlc doctor
 ```
 
-Replace `claude` with `kiro`, `kiro-ide`, `codex`, `cursor`, `opencode`, `jcode`, or
+Replace `claude` with `kiro`, `kiro-v2`, `codex`, `cursor`, `opencode`, `jcode`, or
 `copilot`. Running `aidlc config` without `--harness` starts the interactive
 setup when a terminal is available. If you use Kiro IDE's own terminal in a
 project folder you have not trusted yet, Kiro first asks whether you trust it.
 Choose **Trust Folder & Continue** only for your own project or one you have
 checked, because trusting lets the folder's `.kiro` hooks run commands on your
 machine; otherwise choose **Cancel** and review the folder first (see
-[First run](docs/guide/harnesses/kiro-ide.md#first-run)).
+[First run](docs/guide/harnesses/kiro.md#first-run)).
 
 ### 3. Start a workflow
 
@@ -86,23 +86,25 @@ guide in the table below. The complete walkthrough is in
 | Harness | Configure | Open | Invoke | Guide |
 | --- | --- | --- | --- | --- |
 | Claude Code | `aidlc config --harness claude` | `claude` | `/aidlc` | [Getting Started](docs/guide/01-getting-started.md) |
-| Kiro: Kiro IDE >= 1.1.70 / Kiro CLI >= 2.24.1 (v3) | `aidlc config --harness kiro-ide` | Open the project in Kiro IDE and choose **aidlc** in the chat panel's agent picker, or run `kiro-cli --v3` (when Kiro asks whether you trust the folder and you know what is in it, choose **Trust, continue**) | `/aidlc` | [Kiro IDE](docs/guide/harnesses/kiro-ide.md) |
-| Kiro CLI (V2) >= 2.6 | `aidlc config --harness kiro` | `kiro-cli --v2` (Kiro CLI 2.21.4 or later; for an older one, see [Kiro CLI](docs/guide/harnesses/kiro-cli.md#prerequisites)) | `/aidlc` | [Kiro CLI](docs/guide/harnesses/kiro-cli.md) |
+| Kiro: Kiro IDE >= 1.1.70 / Kiro CLI >= 2.24.1 (v3) | `aidlc config --harness kiro` | Open the project in Kiro IDE and choose **aidlc** in the chat panel's agent picker, or run `kiro-cli --v3` (when Kiro asks whether you trust the folder and you know what is in it, choose **Trust, continue**) | `/aidlc` | [Kiro](docs/guide/harnesses/kiro.md) |
+| Kiro CLI (V2) >= 2.6 | `aidlc config --harness kiro-v2` | `kiro-cli --v2` (Kiro CLI 2.21.4 or later; for an older one, see [Kiro CLI (V2) prerequisites](docs/guide/harnesses/kiro.md#kiro-cli-v2-prerequisites)) | `/aidlc` | [Kiro CLI (V2)](docs/guide/harnesses/kiro.md#kiro-cli-v2) |
 | Codex CLI >= 0.145.0 | `aidlc config --harness codex` | `codex` | `$aidlc` | [Codex CLI](docs/guide/harnesses/codex-cli.md) |
 | Cursor | `aidlc config --harness cursor` | Open Cursor or run `agent` | `/aidlc` | [Cursor](docs/guide/harnesses/cursor.md) |
 | opencode >= 1.18.29 / OpenCode 2 | `aidlc config --harness opencode` | `opencode` | `/aidlc` | [opencode](docs/guide/harnesses/opencode.md) |
 | jcode | `aidlc config --harness jcode` | `jcode` (run `jcode trust grant` once) | `/aidlc` | [jcode](docs/guide/harnesses/jcode.md) |
 | GitHub Copilot CLI >= 1.0.74 / VS Code >= 1.130 | `aidlc config --harness copilot` | Copilot CLI or VS Code | `/aidlc` | [GitHub Copilot](docs/guide/harnesses/copilot.md) |
 
+AI-DLC 2.11.3 and earlier, and the 2.11.4 previews of 2026-11-04 and 2026-11-05, read the two Kiro names the other way: Kiro is `--harness kiro-ide` and Kiro CLI (V2) is `--harness kiro`, and they do not know `kiro-v2`. `--harness kiro-ide` names Kiro on those releases and on this one.
+
 Model-provider setup belongs to the harness. Shipped project configuration
 keeps the provider and model already selected by the user. `aidlc config
 providers` can apply Amazon Bedrock settings on supported project surfaces or
 record manual setup for other harnesses. Kiro CLI and Kiro IDE need no provider
 answer because model access comes with Kiro. For Kiro's v3 engine on Kiro CLI
-2.24.1 or later, use `kiro-ide` and start `kiro-cli --v3` (when it asks to trust the folder
-and you know what is in it, choose **Trust, continue**); `kiro` is Kiro CLI (V2)
-([Kiro CLI](docs/guide/harnesses/kiro-cli.md) says how an existing `kiro`
-project switches). The methodology itself is
+2.24.1 or later, use `kiro` and start `kiro-cli --v3` (when it asks to trust the folder
+and you know what is in it, choose **Trust, continue**); `kiro-v2` is Kiro CLI (V2)
+([Kiro CLI (V2)](docs/guide/harnesses/kiro.md#kiro-cli-v2) says how an existing Kiro CLI
+(V2) project switches). The methodology itself is
 provider-independent.
 
 ## Recommended Model
@@ -123,7 +125,7 @@ audited lifecycle:
 - 11 workflow profiles for features, bug fixes, infrastructure, security,
   proofs of concept, enterprise delivery, and other common work
 - Human approval gates and source-bound review evidence
-- 131-event audit trail plus persistent state, team knowledge, and learned rules
+- 134-event audit trail plus persistent state, team knowledge, and learned rules
 - The same deterministic engine across every supported harness
 
 Start with [Workflow Profiles](docs/guide/workflow-profiles.md) to compare
