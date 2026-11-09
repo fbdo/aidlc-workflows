@@ -1442,7 +1442,7 @@ describe("t299 first-run setup wizard", () => {
   // The ending checks kiro-cli itself, a shell-script stand-in here.
   test.skipIf(process.platform === "win32")("Kiro chosen where only Kiro CLI is found ends with Kiro CLI's start step, then Kiro IDE's", () => {
     const saved = kiroSeam({ "chat.defaultModel": "claude-opus-5" });
-    const result = runWizard("6\n\n", { harnesses: kiroCliOnly, env: saved.env });
+    const result = runWizard("7\n\n", { harnesses: kiroCliOnly, env: saved.env });
     expect(result.status, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).toContain("Using Kiro.");
     expect(result.stdout).toContain(kiroCliSteps);
