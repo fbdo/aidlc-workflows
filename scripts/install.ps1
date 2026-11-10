@@ -692,8 +692,22 @@ try {
   if ($env:AIDLC_RELEASE_REPOSITORY) {
     $arguments += @('--release-repository', $env:AIDLC_RELEASE_REPOSITORY)
   }
-  $applyOutput = (& $binary @arguments --json | Out-String).Trim()
-  $applyCode = $LASTEXITCODE
+  # The binary writes UTF-8 and Windows PowerShell 5.1 reads it in the console
+  # code page, which garbles a non-ASCII letter in an install path. The
+  # console's own encoding comes back as it was.
+  $consoleEncoding = $null
+  try {
+    $consoleEncoding = [Console]::OutputEncoding
+    [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
+  } catch {
+    $consoleEncoding = $null
+  }
+  try {
+    $applyOutput = (& $binary @arguments --json | Out-String).Trim()
+    $applyCode = $LASTEXITCODE
+  } finally {
+    if ($null -ne $consoleEncoding) { [Console]::OutputEncoding = $consoleEncoding }
+  }
   try {
     $applyResult = $applyOutput | ConvertFrom-Json
   } catch {

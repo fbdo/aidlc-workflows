@@ -89,6 +89,7 @@ describe("t-jcode-packaging dist/jcode determinism + shell shape", () => {
       "aidlc-session-cost",
       "aidlc-replay",
       "aidlc-outcomes-pack",
+      "aidlc-issue-report",
       "aidlc-knowledge",
     ]) {
       expect(skills, name).toContain(name);

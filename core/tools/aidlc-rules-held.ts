@@ -345,6 +345,8 @@ function hostRunsThisChat(harness: string, sessionId: string): boolean {
       return env.KIRO_SESSION_ID ? env.KIRO_SESSION_ID === sessionId : true;
     case "opencode":
       return env.OPENCODE === "1";
+    case "jcode":
+      return env.JCODE_SESSION_ID === sessionId;
     case "codex":
       return env.CODEX_THREAD_ID === sessionId;
     default:

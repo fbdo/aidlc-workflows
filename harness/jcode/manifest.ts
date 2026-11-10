@@ -29,6 +29,11 @@ const manifest: HarnessManifest = {
   name: "jcode",
   productName: "jcode",
   configNextStep: "open jcode in this project, run `jcode trust grant` once, then run `/aidlc --doctor`",
+  // jcode gives every bash command its session id as JCODE_SESSION_ID; a
+  // native engine with several tools set up reads it to know it runs for jcode.
+  hostShell: { env: ["JCODE_SESSION_ID"] },
+  // A clean chat for new work started beside other work.
+  newChatStep: { text: "open a new chat, then type <entry>" },
   harnessDir: ".jcode",
   orchestratorSkillPath: ".jcode/skills/aidlc/SKILL.md",
   tierFlavor: "jcode",
@@ -64,6 +69,7 @@ const manifest: HarnessManifest = {
     { src: "skills/aidlc-session-cost", dst: "skills/aidlc-session-cost" },
     { src: "skills/aidlc-replay", dst: "skills/aidlc-replay" },
     { src: "skills/aidlc-outcomes-pack", dst: "skills/aidlc-outcomes-pack" },
+    { src: "skills/aidlc-issue-report", dst: "skills/aidlc-issue-report" },
     { src: "skills/aidlc-knowledge", dst: "skills/aidlc-knowledge" },
   ],
 
