@@ -210,6 +210,7 @@ function pluginNameFromRoot(): string {
     ".cursor-plugin",
     ".plugin",
     ".kiro-plugin",
+    ".jcode-plugin",
   ]) {
     try {
       const m = JSON.parse(readFileSync(join(PLUGIN_ROOT, md, "plugin.json"), "utf-8"));
